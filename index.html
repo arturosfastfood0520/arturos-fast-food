@@ -23,7 +23,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(15,14,12,.97
 .cart-btn .badge{position:absolute;top:-6px;right:-6px;background:var(--a);color:#fff;border-radius:99px;font-size:.6rem;font-weight:800;padding:2px 6px;min-width:18px;text-align:center;display:none;}
 
 /* CATEGORY NAV */
-.cat-nav{position:fixed;top:52px;left:0;right:0;z-index:99;background:var(--bg);}
+.cat-nav{position:fixed;top:52px;left:0;right:0;z-index:99;background:var(--bg);max-height:calc(100vh - 52px);overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .back-btn{display:none;padding:12px 16px;background:var(--s);border:none;border-bottom:1px solid var(--b);color:var(--a);font-size:.88rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%;text-align:left;}
 .back-btn.show{display:block;}
 .cats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 16px;border-bottom:1px solid var(--b);background:var(--bg);}
