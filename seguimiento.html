@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arturo's — Seguimiento</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f0e0c;--a:#e8521a;--a2:#f5a623;--g:#4caf72;--t:#f0ede8;--m:#7a7670;--s:#1a1916;--s2:#242220;--b:#2e2c29;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;}
+.header{background:rgba(15,14,12,.96);border-bottom:1px solid var(--b);padding:14px 18px;}
+.header .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:var(--a);}
+.header p{font-size:.72rem;color:var(--m);}
+.content{padding:18px;max-width:500px;margin:0 auto;}
+.order-id{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:var(--a);margin-bottom:4px;}
+.order-sub{color:var(--m);font-size:.82rem;margin-bottom:20px;}
+.timeline{display:flex;flex-direction:column;margin-bottom:24px;}
+.step{display:flex;gap:14px;position:relative;}
+.step-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;border:2px solid var(--b);background:var(--s2);z-index:1;}
+.step-icon.done{background:var(--g);border-color:var(--g);}
+.step-icon.active{background:var(--a);border-color:var(--a);animation:glow .8s ease infinite alternate;}
+@keyframes glow{from{box-shadow:0 0 0 0 rgba(232,82,26,.4)}to{box-shadow:0 0 0 8px rgba(232,82,26,0)}}
+.step-line{position:absolute;left:19px;top:40px;width:2px;height:calc(100%);background:var(--b);z-index:0;}
+.step-line.done{background:var(--g);}
+.step-info{padding:8px 0 24px;}
+.step-title{font-weight:700;font-size:.92rem;}
+.step-title.done{color:var(--g);}
+.step-title.active{color:var(--a);}
+.step-title.pending{color:var(--m);}
+.step-desc{font-size:.75rem;color:var(--m);margin-top:2px;}
+.dom-card{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:14px;margin-bottom:18px;display:flex;align-items:center;gap:12px;}
+.dom-avatar{width:44px;height:44px;border-radius:50%;background:var(--a);display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;}
+.dom-name{font-weight:700;font-size:.95rem;}
+.dom-status{font-size:.75rem;color:var(--g);margin-top:2px;}
+.order-card{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:14px;margin-bottom:18px;}
+.order-card h3{font-family:'Syne',sans-serif;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--m);margin-bottom:10px;}
+.order-row{display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:5px;}
+.order-row.total{font-weight:700;border-top:1px solid var(--b);padding-top:8px;margin-top:5px;}
+.order-row.total .v{color:var(--a2);font-family:'Syne',sans-serif;}
+.wa-help{display:flex;align-items:center;justify-content:center;gap:7px;padding:12px;background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.25);border-radius:10px;font-size:.82rem;font-weight:600;color:#25D366;text-decoration:none;margin-bottom:18px;}
+.not-found{text-align:center;padding:60px 20px;color:var(--m);}
+.not-found .big{font-size:3rem;margin-bottom:10px;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <div class="logo">🍔 Arturo's Fast Food</div>
+    <p>Seguimiento de tu pedido en tiempo real</p>
+  </div>
+</div>
+<div class="content" id="content">
+  <div class="not-found"><div class="big">⏳</div><p>Cargando tu pedido...</p></div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getDatabase, ref, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+const app = initializeApp({databaseURL:'https://arturos-fast-food-default-rtdb.firebaseio.com'});
+const db = getDatabase(app);
+
+const params = new URLSearchParams(window.location.search);
+const orderKey = params.get('key');
+
+if(!orderKey){
+  document.getElementById('content').innerHTML = '<div class="not-found"><div class="big">❌</div><p>Link inválido</p></div>';
+} else {
+
+  var stOrder = ['nuevo','preparando','listo','en_camino','enviado'];
+  function fmt(n){ return '$'+(n||0).toLocaleString('es-CO'); }
+
+  onValue(ref(db,'pedidos/'+orderKey), function(snap){
+    var o = snap.val();
+    if(!o){ document.getElementById('content').innerHTML='<div class="not-found"><div class="big">❌</div><p>Pedido no encontrado</p></div>'; return; }
+
+    var st = o.st||'nuevo';
+    var stIdx = stOrder.indexOf(st);
+    var cl = o.cl||o.client||'Cliente';
+    var addr = o.addr||o.address||'';
+    var barrio = o.barrio||'';
+    var dom = o.dom||null;
+    var items = o.items||[];
+    var sub = items.reduce(function(s,i){ return s+((i.precio||i.price||0)*(i.qty||1)); },0);
+
+    var steps = [
+      {st:'nuevo', icon:'🍳', title:'Pedido recibido', desc:'Tu pedido fue confirmado'},
+      {st:'preparando', icon:'🔥', title:'Preparando', desc:'Estamos cocinando tu pedido'},
+      {st:'listo', icon:'📦', title:'Listo para enviar', desc:'Tu pedido está empacado'},
+      {st:'en_camino', icon:'🏍️', title:'En camino', desc: dom?'Tu domiciliario '+dom+' va en camino':'El domiciliario va en camino'},
+      {st:'enviado', icon:'✅', title:'Entregado', desc:'¡Disfruta tu pedido!'},
+    ];
+
+    var timelineHtml = '';
+    steps.forEach(function(step, i){
+      var isDone = stOrder.indexOf(step.st) < stIdx;
+      var isActive = step.st === st;
+      var isLast = i === steps.length-1;
+      var cls = isDone?'done':isActive?'active':'pending';
+      timelineHtml += '<div class="step">'
+        +(isLast?'':'<div class="step-line '+(isDone?'done':'')+'"></div>')
+        +'<div class="step-icon '+(isDone||isActive?cls:'')+'">'+step.icon+'</div>'
+        +'<div class="step-info">'
+        +'<div class="step-title '+cls+'">'+step.title+'</div>'
+        +(isDone||isActive?'<div class="step-desc">'+step.desc+'</div>':'')
+        +'</div></div>';
+    });
+
+    var domHtml = '';
+    if(dom && (st==='en_camino'||st==='enviado')){
+      domHtml = '<div class="dom-card">'
+        +'<div class="dom-avatar">🏍️</div>'
+        +'<div><div class="dom-name">'+dom+'</div>'
+        +'<div class="dom-status">'+(st==='en_camino'?'● En camino a tu dirección':'✅ Pedido entregado')+'</div>'
+        +'</div></div>';
+    }
+
+    var itemsHtml = items.map(function(i){
+      return '<div class="order-row"><span>'+(i.qty||1)+'x '+(i.nombre||i.name||'Producto')+(i.ss?' ('+i.ss+')':'')+'</span><span>'+fmt((i.precio||0)*(i.qty||1))+'</span></div>';
+    }).join('');
+
+    document.getElementById('content').innerHTML =
+      '<div class="order-id">'+o.id+'</div>'
+      +'<p class="order-sub">'+cl+' · '+addr+(barrio?' · '+barrio:'')+'</p>'
+      +'<div class="timeline">'+timelineHtml+'</div>'
+      +domHtml
+      +'<div class="order-card"><h3>🛒 Tu pedido</h3>'+itemsHtml
+      +'<div class="order-row total"><span>Subtotal</span><span class="v">'+fmt(sub)+'</span></div>'
+      +'<div class="order-row"><span>🛵 Domicilio</span><span style="color:var(--a2)">Por confirmar</span></div>'
+      +'</div>'
+      +'<a class="wa-help" href="https://wa.me/573003585092?text=Hola!+Tengo+una+pregunta+sobre+mi+pedido+'+encodeURIComponent(o.id)+'" target="_blank">'
+      +'<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>'
+      +' Contactar al restaurante</a>';
+  });
+}
+
+// Force unregister old service workers
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    regs.forEach(function(r){ r.unregister(); });
+  });
+}
+</script>
+</body>
+</html>

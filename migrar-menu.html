@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Migrar Menú</title>
+<style>
+body{font-family:Arial,sans-serif;background:#0f0e0c;color:#f0ede8;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;}
+.box{background:#1a1916;border:1px solid #2e2c29;border-radius:16px;padding:32px;max-width:400px;width:90%;text-align:center;}
+h2{color:#e8521a;margin-bottom:12px;}
+p{color:#7a7670;font-size:.85rem;margin-bottom:20px;line-height:1.5;}
+.btn{width:100%;padding:14px;background:#e8521a;color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;margin-bottom:8px;}
+.btn:disabled{background:#444;cursor:not-allowed;}
+.btn-cancel{background:transparent;border:1px solid #2e2c29;color:#7a7670;}
+#status{margin-top:16px;font-size:.85rem;line-height:1.6;}
+.ok{color:#4caf72;}
+.err{color:#e05252;}
+.loading{color:#f5a623;}
+</style>
+</head>
+<body>
+<div class="box">
+  <div style="font-size:2.5rem;margin-bottom:10px;">🍽️</div>
+  <h2>Actualizar Menú Completo</h2>
+  <p>Esto borrará el menú actual de Firebase y cargará los <strong style="color:#f0ede8;">185 productos completos</strong> del PDF incluyendo Pizzas, Perros Calientes, Salchipapa, Chuzos, Mazorcas, Patacones y más.</p>
+  <button class="btn" id="btn" onclick="migrate()">🚀 Actualizar ahora</button>
+  <div id="status"></div>
+</div>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import{getDatabase,ref,set,push}from'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+const app=initializeApp({databaseURL:'https://arturos-fast-food-default-rtdb.firebaseio.com'});
+const db=getDatabase(app);
+
+var DEFAULT_MENU = [
+  // PIZZAS (con tamaños)
+  {n:"Esp. Arturo's",cat:'Pizzas',e:'🍕',p:25000,d:'Jamón, pollo, champiñón, pimentón, cebolla y salami',sz:{'Personal':25000,'Small':40000,'Medium':60000,'Large':80000,'XL':100000}},
+  {n:'Hawaiana y Pollo',cat:'Pizzas',e:'🍕',p:25000,d:'Pollo, piña y jamón',sz:{'Personal':25000,'Small':40000,'Medium':60000,'Large':80000,'XL':100000}},
+  {n:'4 Carnes',cat:'Pizzas',e:'🍕',p:25000,d:'Jamón, chorizo, butifarra y pollo',sz:{'Personal':25000,'Small':40000,'Medium':60000,'Large':80000,'XL':100000}},
+  {n:'Americana',cat:'Pizzas',e:'🍕',p:25000,d:'Pollo, tocineta y maíz',sz:{'Personal':25000,'Small':35000,'Medium':50000,'Large':70000,'XL':90000}},
+  {n:'Caribeña',cat:'Pizzas',e:'🍕',p:25000,d:'Pollo champiñón y piña',sz:{'Personal':25000,'Small':35000,'Medium':50000,'Large':70000,'XL':90000}},
+  {n:'Pollo Champiñón',cat:'Pizzas',e:'🍕',p:25000,d:'Pollo y champiñón',sz:{'Personal':25000,'Small':35000,'Medium':50000,'Large':70000,'XL':90000}},
+  {n:'Pollo Jamón',cat:'Pizzas',e:'🍕',p:25000,d:'Pollo y jamón',sz:{'Personal':25000,'Small':35000,'Medium':50000,'Large':70000,'XL':90000}},
+  {n:'Barranquillera',cat:'Pizzas',e:'🍕',p:25000,d:'Chorizo, butifarra, pimentón, cebolla y queso costeño',sz:{'Personal':25000,'Small':35000,'Medium':50000,'Large':70000,'XL':90000}},
+  {n:'Vegetariana',cat:'Pizzas',e:'🍕',p:25000,d:'Tomate, champiñón, pimentón y cebolla',sz:{'Personal':25000,'Small':30000,'Medium':50000,'Large':70000,'XL':90000}},
+  {n:'Pollo y Queso',cat:'Pizzas',e:'🍕',p:25000,d:'Pollo y queso',sz:{'Personal':25000,'Small':30000,'Medium':40000,'Large':55000,'XL':70000}},
+  {n:'Ranchera',cat:'Pizzas',e:'🍕',p:25000,d:'Salchicha ranchera, pimentón y cebolla',sz:{'Personal':25000,'Small':30000,'Medium':40000,'Large':55000,'XL':70000}},
+  {n:'Jamón y Queso',cat:'Pizzas',e:'🍕',p:22000,d:'Jamón y queso',sz:{'Personal':22000,'Small':30000,'Medium':40000,'Large':55000,'XL':70000}},
+  {n:'Peperoni',cat:'Pizzas',e:'🍕',p:22000,d:'Peperoni',sz:{'Personal':22000,'Small':30000,'Medium':40000,'Large':55000,'XL':70000}},
+  {n:'Salami',cat:'Pizzas',e:'🍕',p:22000,d:'Salami',sz:{'Personal':22000,'Small':30000,'Medium':40000,'Large':55000,'XL':70000}},
+  {n:'Tomate',cat:'Pizzas',e:'🍕',p:22000,d:'Tomate',sz:{'Personal':22000,'Small':30000,'Medium':40000,'Large':55000,'XL':70000}},
+  {n:'Bocadillo',cat:'Pizzas',e:'🍕',p:22000,d:'Bocadillo',sz:{'Personal':22000,'Small':30000,'Medium':40000,'Large':55000,'XL':70000}},
+  {n:'Peperoni y Salami',cat:'Pizzas',e:'🍕',p:22000,d:'Peperoni y salami',sz:{'Personal':22000,'Small':30000,'Medium':40000,'Large':55000,'XL':70000}},
+  {n:'Hawaiana',cat:'Pizzas',e:'🍕',p:22000,d:'Jamón y piña',sz:{'Personal':22000,'Small':30000,'Medium':40000,'Large':55000,'XL':70000}},
+  {n:'Jamón y Salami',cat:'Pizzas',e:'🍕',p:22000,d:'Jamón y salami',sz:{'Personal':22000,'Small':30000,'Medium':40000,'Large':55000,'XL':70000}},
+  // CALZONES
+  {n:"Especial Arturo's",cat:'Calzones',e:'🥙',p:25000,d:'Jamón, pollo, pepperoni, champiñón, pimentón, cebolla y salami'},
+  {n:'Americano',cat:'Calzones',e:'🥙',p:25000,d:'Pollo, tocineta y maíz'},
+  {n:'4 Carnes',cat:'Calzones',e:'🥙',p:25000,d:'Jamón, chorizo, butifarra y pollo'},
+  {n:'Pollo Champiñón',cat:'Calzones',e:'🥙',p:25000,d:'Pollo y champiñón'},
+  {n:'Hawaiano Pollo',cat:'Calzones',e:'🥙',p:25000,d:'Pollo y piña'},
+  {n:'Vegetariano',cat:'Calzones',e:'🥙',p:25000,d:'Tomate, champiñón, pimentón y cebolla'},
+  {n:'Ranchero',cat:'Calzones',e:'🥙',p:25000,d:'Salchicha ranchera, pimentón y cebolla'},
+  // HAMBURGUESAS
+  {n:'Hamburguesa Especial',cat:'Hamburguesas',e:'🍔',p:34000,d:'Carne artesanal, pechuga, jamón y tocineta'},
+  {n:'Hamburguesa Mixta',cat:'Hamburguesas',e:'🍔',p:31000,d:'Carne artesanal y pollo, tocineta'},
+  {n:'Hamburguesa Doble Carne',cat:'Hamburguesas',e:'🍔',p:29000,d:'Doble carne artesanal, tocineta'},
+  {n:'Hamburguesa Doble Pollo',cat:'Hamburguesas',e:'🍔',p:29000,d:'Doble pechuga'},
+  {n:'Hamburguesa Carne',cat:'Hamburguesas',e:'🍔',p:20000,d:'Carne artesanal, tocineta'},
+  {n:'Hamburguesa Pollo',cat:'Hamburguesas',e:'🍔',p:20000,d:'Pechuga de pollo'},
+  // PERROS CALIENTES
+  {n:'Zurch',cat:'Perros Calientes',e:'🌭',p:20000,d:'Salchicha alemana especial y tocineta'},
+  {n:'Americano',cat:'Perros Calientes',e:'🌭',p:15000,d:'Salchicha americana, queso mozzarella, mostaza, salsa de tomate y cebolla'},
+  {n:'Italo Suizo Hawaiano',cat:'Perros Calientes',e:'🌭',p:27000,d:'Mozzarella 2, Jamón 2, Piña en trocito, Tocineta'},
+  {n:'Italo Suizo',cat:'Perros Calientes',e:'🌭',p:26000,d:'Mozzarella 2, Jamón 2, Salchicha suiza'},
+  {n:'Italiano',cat:'Perros Calientes',e:'🌭',p:17000,d:'Queso mozzarella 2 y jamón 2'},
+  {n:'Suizo',cat:'Perros Calientes',e:'🌭',p:18000,d:'Salchicha suiza'},
+  {n:'Hawaiano',cat:'Perros Calientes',e:'🌭',p:17000,d:'Jamón 2, Trocito 1, Piña en trocito'},
+  {n:'Italo Hawaiano',cat:'Perros Calientes',e:'🌭',p:19500,d:'Mozzarella 2, jamón 2, piña en trocito'},
+  {n:'Pollo y Carne',cat:'Perros Calientes',e:'🌭',p:21000,d:'Salchicha, carne y pollo'},
+  {n:'Cuatro Carnes',cat:'Perros Calientes',e:'🌭',p:25000,d:'Salchicha, chorizo, butifarra carne y pollo'},
+  {n:'Tociperro',cat:'Perros Calientes',e:'🌭',p:19000,d:'Tocineta 3, salchicha perro'},
+  {n:'Perro Pollo',cat:'Perros Calientes',e:'🌭',p:18000,d:'Salchicha pechuga a la plancha en cuadritos'},
+  {n:'Lomito',cat:'Perros Calientes',e:'🌭',p:22000,d:'Salchicha, lomo ancho a la plancha en cuadritos'},
+  {n:'Ranchero',cat:'Perros Calientes',e:'🌭',p:16000,d:'Salchicha ranchera'},
+  {n:'Choriperro',cat:'Perros Calientes',e:'🌭',p:16500,d:'Chorizo largo'},
+  {n:'Butiperro',cat:'Perros Calientes',e:'🌭',p:15500,d:'Salchicha, butifarra'},
+  {n:'Sencillo Especial',cat:'Perros Calientes',e:'🌭',p:12000,d:'Salchicha, mozzarella 2'},
+  {n:'Gemelo',cat:'Perros Calientes',e:'🌭',p:11000,d:'Dos salchichas mozzarella'},
+  {n:'Sencillo',cat:'Perros Calientes',e:'🌭',p:9000,d:'Pan y salchicha'},
+  {n:'Alemán',cat:'Perros Calientes',e:'🌭',p:15000,d:'Salchicha alemana'},
+  // SANDWICH
+  {n:'Combinado',cat:'Sandwich',e:'🥪',p:31000,d:'2 panes de pera, carne, pollo, chorizo butifarra, pimentón y cebolla grille, lechuga tomate, queso mozzarella 2'},
+  {n:'Con Tocineta',cat:'Sandwich',e:'🥪',p:19000,d:'Tocineta 3, lechuga, tomate, cebolla, queso mozzarella 2'},
+  {n:'Con Pollo',cat:'Sandwich',e:'🥪',p:21000,d:'Pechuga a la plancha, lechuga, tomate, cebolla, queso mozzarella 2'},
+  {n:'Con Jamón',cat:'Sandwich',e:'🥪',p:15000,d:'Lechuga, tomate, cebolla, queso mozzarella 2'},
+  {n:'Con Queso',cat:'Sandwich',e:'🥪',p:14500,d:'4 quesos mozzarella, lechuga, tomate, cebolla'},
+  // SALCHIPAPA
+  {n:'Combinada',cat:'Salchipapa',e:'🍟',p:31000,d:'Manguera, carne, pollo, chorizo, butifarra, pimentón, cebolla'},
+  {n:'Combinada Especial',cat:'Salchipapa',e:'🍟',p:36000,d:'Manguera, carne, pollo, chorizo, butifarra, pimentón y cebolla, queso gratinado'},
+  {n:'Carne y Pollo',cat:'Salchipapa',e:'🍟',p:29000,d:'Manguera, pollo, carne'},
+  {n:'Carne y Pollo Especial',cat:'Salchipapa',e:'🍟',p:34000,d:'Manguera, pollo, carne, queso gratinado y maíz'},
+  {n:'Suiza Solo',cat:'Salchipapa',e:'🍟',p:33000,d:'Suiza, pollo'},
+  {n:'Polo Ranchera',cat:'Salchipapa',e:'🍟',p:32000,d:'Ranchera, pollo'},
+  {n:'Suiza',cat:'Salchipapa',e:'🍟',p:24000,d:'Salchicha suiza'},
+  {n:'Choripapa',cat:'Salchipapa',e:'🍟',p:21000,d:'Chorizo extra largo'},
+  {n:'Ranchera',cat:'Salchipapa',e:'🍟',p:23000,d:'Salchicha ranchera'},
+  {n:'Con Pollo',cat:'Salchipapa',e:'🍟',p:26000,d:'Pollo, manguera'},
+  {n:'Con Chorizo',cat:'Salchipapa',e:'🍟',p:22000,d:'Manguera, chorizo'},
+  {n:'Con Carne',cat:'Salchipapa',e:'🍟',p:28000,d:'Manguera, carne'},
+  {n:'Con Butifarra',cat:'Salchipapa',e:'🍟',p:22000,d:'Manguera'},
+  {n:'Sencilla',cat:'Salchipapa',e:'🍟',p:16000,d:'Manguera'},
+  {n:'Sencilla Especial',cat:'Salchipapa',e:'🍟',p:21000,d:'Manguera, queso gratinado y maíz'},
+  // SALVAJADA
+  {n:'Salvajada para 3',cat:'Salvajada',e:'🍲',p:56000,d:'Carne, pollo, chorizo, butifarra, pimentón, cebolla grille, papas a la francesa y bollo'},
+  {n:'Salvajada para 3 Gratinada',cat:'Salvajada',e:'🍲',p:66000,d:'Con queso gratinado'},
+  {n:'Salvajada para 3 Carne y Pollo',cat:'Salvajada',e:'🍲',p:57000,d:'Carne, pollo, pimentón, cebolla grille, papas a la francesa y bollo'},
+  {n:'Salvajada para 3 Carne y Pollo Gratinada',cat:'Salvajada',e:'🍲',p:67000,d:'Con queso gratinado'},
+  {n:'Salvajada Familiar 5-6',cat:'Salvajada',e:'🍲',p:86000,d:'Carne, pollo, chorizo, butifarra, pimentón, cebolla grille, papas a la francesa y bollo'},
+  {n:'Salvajada Familiar Gratinada',cat:'Salvajada',e:'🍲',p:96000,d:'Con queso gratinado'},
+  {n:'Salvajada Familiar Carne y Pollo',cat:'Salvajada',e:'🍲',p:87000,d:'Carne, pollo, pimentón, cebolla grille, papas a la francesa y bollo'},
+  {n:'Salvajada Familiar Carne y Pollo Gratinada',cat:'Salvajada',e:'🍲',p:97000,d:'Con queso gratinado'},
+  // CHUZOS DESGRANADOS
+  {n:'Combinado con maíz con papitas',cat:'Chuzos',e:'🥩',p:32000,d:'Carne, pollo, chorizo, butifarra, pimentón y cebolla grille, con maíz'},
+  {n:'Combinado con maíz con bollos',cat:'Chuzos',e:'🥩',p:29000,d:'Carne, pollo, chorizo, butifarra, pimentón y cebolla grille, bollo y maíz'},
+  {n:'Combinado con papitas',cat:'Chuzos',e:'🥩',p:29000,d:'Carne, pollo, chorizo, butifarra, pimentón y cebolla grille'},
+  {n:'Combinado con bollo',cat:'Chuzos',e:'🥩',p:26000,d:'Carne, pollo, chorizo, butifarra, pimentón y cebolla grille'},
+  {n:'Chuzo de Carne con papita',cat:'Chuzos',e:'🥩',p:30000,d:'Con papita'},
+  {n:'Chuzo de Carne con bollo',cat:'Chuzos',e:'🥩',p:27000,d:'Con bollo'},
+  {n:'Chuzo de Pollo con papita',cat:'Chuzos',e:'🥩',p:25000,d:'Con papita'},
+  {n:'Chuzo de Pollo con bollo',cat:'Chuzos',e:'🥩',p:22000,d:'Con bollo'},
+  {n:'Chuzo de Carne y Pollo con papita',cat:'Chuzos',e:'🥩',p:28000,d:'Con papita'},
+  {n:'Chuzo de Carne y Pollo con bollo',cat:'Chuzos',e:'🥩',p:25000,d:'Con bollo'},
+  {n:'Chuzo de Chorizo y Butifarra con papita',cat:'Chuzos',e:'🥩',p:19000,d:'Con papita'},
+  {n:'Chuzo de Chorizo y Butifarra con bollo',cat:'Chuzos',e:'🥩',p:16000,d:'Con bollo'},
+  {n:'Gratinado',cat:'Chuzos',e:'🥩',p:3500,d:'Adicional gratinado'},
+  {n:'Gratinado Especial Queso y Maíz',cat:'Chuzos',e:'🥩',p:7000,d:'Adicional queso y maíz'},
+  // MAZORCAS DESGRANADAS
+  {n:'Combinada',cat:'Mazorcas',e:'🌽',p:31000,d:'Chorizo, butifarra, carne, pollo y maíz'},
+  {n:'Con Carne',cat:'Mazorcas',e:'🌽',p:30000,d:'Carne y maíz'},
+  {n:'Con Jamón',cat:'Mazorcas',e:'🌽',p:22000,d:'Jamón 2 y maíz'},
+  {n:'Con Pollo',cat:'Mazorcas',e:'🌽',p:26000,d:'Pollo y maíz'},
+  {n:'Con Tocineta',cat:'Mazorcas',e:'🌽',p:23000,d:'3 tocinetas y maíz'},
+  {n:'Gratinada',cat:'Mazorcas',e:'🌽',p:20000,d:'Maíz gratinado'},
+  {n:'Sencilla',cat:'Mazorcas',e:'🌽',p:18000,d:'Maíz'},
+  {n:'Ranchera',cat:'Mazorcas',e:'🌽',p:24000,d:'Salchicha ranchera, maíz'},
+  {n:'Suiza',cat:'Mazorcas',e:'🌽',p:26000,d:'Salchicha suiza, maíz'},
+  // MENÚ INFANTIL
+  {n:'Nuggets de Pollo',cat:'Menú Infantil',e:'🧒',p:20000,d:'Papa a la francesa, jugo de cajita y brownie'},
+  // POLLO BROASTER
+  {n:'8 Presas Papa Cocida',cat:'Pollo Broaster',e:'🍗',p:58000,d:'Con papa cocida o bollo'},
+  {n:'8 Presas Papa Francesa',cat:'Pollo Broaster',e:'🍗',p:65000,d:'Con papa francesa'},
+  {n:'4 Presas Papa Cocida',cat:'Pollo Broaster',e:'🍗',p:31000,d:'Con papa cocida o bollo'},
+  {n:'4 Presas Papa Francesa',cat:'Pollo Broaster',e:'🍗',p:35000,d:'Con papa francesa'},
+  {n:'2 Presas Papa Cocida',cat:'Pollo Broaster',e:'🍗',p:16000,d:'Con papa cocida o bollo'},
+  {n:'2 Presas Papa Francesa',cat:'Pollo Broaster',e:'🍗',p:18000,d:'Con papa francesa'},
+  // ALITAS
+  {n:'Alitas BBQ',cat:'Alitas',e:'🍗',p:23000,d:'Papa a la francesa y ensalada'},
+  {n:'Alitas Picantes',cat:'Alitas',e:'🍗',p:23000,d:'Papa a la francesa y ensalada'},
+  {n:'Alitas Miel Mostaza',cat:'Alitas',e:'🍗',p:23000,d:'Papa a la francesa y ensalada'},
+  // PATACONES DESGRANADOS
+  {n:'Suizo Pollo',cat:'Patacones',e:'🫓',p:29000,d:'Suiza, pechuga a la plancha en cuadrito'},
+  {n:'Carne y Pollo',cat:'Patacones',e:'🫓',p:28000,d:'Carne de res, pechuga a la plancha en cuadrito'},
+  {n:'Combinado',cat:'Patacones',e:'🫓',p:28000,d:'Carne, pollo, chorizo, butifarra, pimentón, cebolla grille'},
+  {n:'Con Pollo',cat:'Patacones',e:'🫓',p:25000,d:'Pechuga a la plancha en cuadrito, pimentón, cebolla grille'},
+  {n:'Ranchero Pollo',cat:'Patacones',e:'🫓',p:29000,d:'Ranchera pechuga a la plancha en cuadrito'},
+  {n:'Ranchero',cat:'Patacones',e:'🫓',p:24000,d:'Salchicha ranchera'},
+  {n:'Chorizo y Butifarra',cat:'Patacones',e:'🫓',p:23000,d:'Chorizo, butifarra'},
+  // ASADOS
+  {n:'Pechuga Deshuesada Gratinada 250g',cat:'Asados',e:'🥩',p:33000,d:'Papa a la francesa y ensalada'},
+  {n:'Pechuga Deshuesada 250g',cat:'Asados',e:'🥩',p:29000,d:'Papas a la francesa y ensalada'},
+  {n:'Lomo Ancho 250g',cat:'Asados',e:'🥩',p:33000,d:'Papas a la francesa y ensalada'},
+  {n:'Punta Gorda 250g',cat:'Asados',e:'🥩',p:33000,d:'Papas a la francesa y ensalada'},
+  {n:'Lomo de Cerdo 250g',cat:'Asados',e:'🥩',p:29000,d:'Papas a la francesa y ensalada'},
+  {n:'Pechuga Gratinada con Champiñón 250g',cat:'Asados',e:'🥩',p:34000,d:'Papa a la francesa y ensalada'},
+  {n:'Costilla a la BBQ',cat:'Asados',e:'🥩',p:37000,d:'500g costilla BBQ o picante, papa a la francesa y ensalada'},
+  // LASAÑAS
+  {n:'Lasaña de Carne',cat:'Lasañas',e:'🍝',p:26000,d:'Aprox. 400g'},
+  {n:'Lasaña de Pollo',cat:'Lasañas',e:'🍝',p:26000,d:'Aprox. 400g'},
+  {n:'Lasaña Mixta',cat:'Lasañas',e:'🍝',p:26000,d:'Aprox. 400g'},
+  // POSTRES
+  {n:'Ensalada de Frutas Mixta',cat:'Postres',e:'🍓',p:23000,d:'Banano, kiwi, pera, fresa, manzana, crema de leche de la casa, queso costeño y helado'},
+  {n:'Fresas con Chocolate',cat:'Postres',e:'🍓',p:16000,d:''},
+  {n:'Fresas con Crema',cat:'Postres',e:'🍓',p:17000,d:''},
+  {n:'Fresas con Crema y Helado',cat:'Postres',e:'🍓',p:19000,d:''},
+  {n:'Fresas con Solo Helado',cat:'Postres',e:'🍓',p:17000,d:''},
+  {n:'Tornado Oreo',cat:'Postres',e:'🍦',p:12000,d:''},
+  {n:'Tornado M&M',cat:'Postres',e:'🍦',p:12000,d:''},
+  {n:'Sundae',cat:'Postres',e:'🍦',p:8500,d:'Arequipe, mora o chocolate'},
+  {n:'Malteada',cat:'Postres',e:'🍦',p:13000,d:''},
+  {n:'Cono Arequipe',cat:'Postres',e:'🍦',p:3500,d:''},
+  {n:'Cono Vainilla',cat:'Postres',e:'🍦',p:3500,d:''},
+  {n:'Waffles con Helado',cat:'Postres',e:'🧇',p:13000,d:'Deliciosos waffles con helado, salsa de chocolate, arequipe o leche condensada y decorado con fresas'},
+  {n:'Waffles Especial con Nutella',cat:'Postres',e:'🧇',p:17000,d:'Con helado, arequipe, leche condensada y decorado con fresas'},
+  {n:'Sandwich de Helado',cat:'Postres',e:'🍨',p:8000,d:'Delicioso pan relleno de helado, bañado en salsa de arequipe, chocolate, leche condensada o mora'},
+  {n:'Sandwich de Helado Especial',cat:'Postres',e:'🍨',p:11000,d:'Pan relleno de helado y nutella, bañado en salsa de arequipe, chocolate, leche condensada o mora'},
+  {n:'Banana Split',cat:'Postres',e:'🍌',p:11500,d:'3 bolas de helado, salsa de chocolate y toping de cereza y un banano'},
+  // BEBIDAS
+  {n:'Gaseosa 1.5 Lt',cat:'Bebidas',e:'🥤',p:10500,d:''},
+  {n:'Gaseosa 3 Lt',cat:'Bebidas',e:'🥤',p:17500,d:''},
+  {n:'Gaseosa Personal',cat:'Bebidas',e:'🥤',p:5000,d:''},
+  {n:'Gaseosa Mini',cat:'Bebidas',e:'🥤',p:3000,d:''},
+  {n:'Jugo Hit Lt',cat:'Bebidas',e:'🥤',p:8500,d:''},
+  {n:'Jugo Hit Personal',cat:'Bebidas',e:'🥤',p:4500,d:''},
+  {n:'Jugo Hit de Cajita',cat:'Bebidas',e:'🥤',p:3500,d:''},
+  {n:'Té Litro',cat:'Bebidas',e:'🥤',p:8500,d:''},
+  {n:'Té Personal',cat:'Bebidas',e:'🥤',p:4500,d:''},
+  {n:'Agua',cat:'Bebidas',e:'💧',p:2500,d:''},
+  {n:'Agua de Manzana',cat:'Bebidas',e:'🥤',p:3500,d:''},
+  {n:'Agua de Manzana Lt',cat:'Bebidas',e:'🥤',p:6000,d:''},
+  {n:'Hatsu de Colores',cat:'Bebidas',e:'🥤',p:8000,d:''},
+  {n:'Soda',cat:'Bebidas',e:'🥤',p:4000,d:''},
+  {n:'Ginger',cat:'Bebidas',e:'🥤',p:4000,d:''},
+  {n:'Limonada Natural',cat:'Bebidas',e:'🍋',p:8000,d:''},
+  {n:'Limonada Cerezada',cat:'Bebidas',e:'🍋',p:10000,d:''},
+  {n:'Limonada de Coco',cat:'Bebidas',e:'🥥',p:10000,d:''},
+  // CERVEZAS
+  {n:'Aguila Light',cat:'Cervezas',e:'🍺',p:6000,d:''},
+  {n:'Aguila Negra',cat:'Cervezas',e:'🍺',p:6000,d:''},
+  {n:'Aguila Michelada',cat:'Cervezas',e:'🍺',p:8000,d:''},
+  {n:'Stella',cat:'Cervezas',e:'🍺',p:9000,d:''},
+  {n:'Heineken',cat:'Cervezas',e:'🍺',p:7000,d:''},
+  {n:'Budweiser',cat:'Cervezas',e:'🍺',p:7000,d:''},
+  {n:'Coronita',cat:'Cervezas',e:'🍺',p:7000,d:''},
+  // JUGOS NATURALES
+  {n:'Mango en Agua',cat:'Jugos',e:'🥭',p:8000,d:''},
+  {n:'Mango en Leche',cat:'Jugos',e:'🥭',p:9000,d:''},
+  {n:'Mora en Agua',cat:'Jugos',e:'🍓',p:8000,d:''},
+  {n:'Mora en Leche',cat:'Jugos',e:'🍓',p:9000,d:''},
+  {n:'Lulo en Agua',cat:'Jugos',e:'🍋',p:8000,d:''},
+  {n:'Lulo en Leche',cat:'Jugos',e:'🍋',p:9000,d:''},
+  {n:'Fresa en Agua',cat:'Jugos',e:'🍓',p:8000,d:''},
+  {n:'Fresa en Leche',cat:'Jugos',e:'🍓',p:9000,d:''},
+  {n:'Maracuyá en Agua',cat:'Jugos',e:'🥤',p:8000,d:''},
+  {n:'Maracuyá en Leche',cat:'Jugos',e:'🥤',p:9000,d:''},
+  {n:'Guanábana en Agua',cat:'Jugos',e:'🥤',p:8000,d:''},
+  {n:'Guanábana en Leche',cat:'Jugos',e:'🥤',p:9000,d:''},
+  {n:'Mandarina en Agua',cat:'Jugos',e:'🍊',p:8000,d:''},
+  {n:'Mandarina en Leche',cat:'Jugos',e:'🍊',p:9000,d:''},
+];
+
+window.migrate = async function(){
+  var btn = document.getElementById('btn');
+  var status = document.getElementById('status');
+  btn.disabled = true;
+  btn.textContent = '⏳ Actualizando...';
+  status.innerHTML = '<span class="loading">Conectando con Firebase...</span>';
+
+  try {
+    // Step 1: Clear menu
+    status.innerHTML = '<span class="loading">🗑️ Borrando menú anterior...</span>';
+    await set(ref(db,'menu'), null);
+    
+    // Step 2: Upload all products
+    status.innerHTML = '<span class="loading">📤 Cargando ' + DEFAULT_MENU.length + ' productos...</span>';
+    var batch = {};
+    DEFAULT_MENU.forEach(function(item){
+      var newKey = push(ref(db,'menu')).key;
+      batch[newKey] = item;
+    });
+    
+    // Upload in chunks of 50
+    var keys = Object.keys(batch);
+    var total = keys.length;
+    var done = 0;
+    
+    for(var i = 0; i < keys.length; i += 50){
+      var chunk = {};
+      keys.slice(i, i+50).forEach(function(k){ chunk[k] = batch[k]; });
+      var chunkData = {};
+      Object.entries(chunk).forEach(function(e){ chunkData['menu/'+e[0]] = e[1]; });
+      
+      // Use set for each chunk
+      for(var [k,v] of Object.entries(chunk)){
+        await set(ref(db,'menu/'+k), v);
+        done++;
+      }
+      status.innerHTML = '<span class="loading">📤 Cargando productos... ' + done + '/' + total + '</span>';
+    }
+    
+    status.innerHTML = '<span class="ok">✅ ¡Listo! ' + total + ' productos cargados correctamente.<br><br>Ya puedes cerrar esta página.</span>';
+    btn.textContent = '✅ Completado';
+    
+  } catch(e) {
+    status.innerHTML = '<span class="err">❌ Error: ' + e.message + '</span>';
+    btn.disabled = false;
+    btn.textContent = '🔄 Intentar de nuevo';
+  }
+};
+</script>
+</body>
+</html>

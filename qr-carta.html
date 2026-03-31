@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QR Carta Arturo's</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#f5f5f5;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:Arial,sans-serif;padding:20px;}
+.card{background:#fff;border:3px solid #e8521a;border-radius:16px;padding:28px 24px;text-align:center;width:320px;box-shadow:0 4px 20px rgba(0,0,0,.12);}
+h2{color:#e8521a;font-size:1.3rem;margin-bottom:2px;}
+#qr{margin:16px auto;display:flex;align-items:center;justify-content:center;}
+#qr canvas{border-radius:8px;}
+.url{color:#e8521a;font-size:.65rem;word-break:break-all;margin:10px 0;}
+.inst{color:#444;font-size:.75rem;line-height:1.5;padding:10px;background:#fff8f5;border-radius:8px;margin-bottom:14px;}
+.print-btn{padding:12px 28px;background:#e8521a;color:#fff;border:none;border-radius:8px;font-size:.9rem;cursor:pointer;font-weight:700;}
+.addr{color:#666;font-size:.7rem;margin-top:10px;line-height:1.4;}
+@media print{.print-btn{display:none;}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+<div class="card">
+  <div style="font-size:2.2rem;margin-bottom:6px;">🍔</div>
+  <h2>Arturo's Fast Food</h2>
+  <p style="color:#e8521a;font-weight:700;font-size:.88rem;margin:4px 0 2px;">Escanea para ver la carta</p>
+  <p style="color:#666;font-size:.76rem;margin-bottom:0;">Menú completo con precios</p>
+  <div id="qr"></div>
+  <div class="inst">📱 Abre la cámara de tu celular<br>y apúntala al código QR</div>
+  <div class="url">arturosfastfood0520.github.io/arturos-fast-food/carta.html</div>
+  <button class="print-btn" onclick="window.print()">🖨️ Imprimir</button>
+  <div class="addr">Cra 41G #44-69 · El Parque · Soledad<br>📞 300 3585092</div>
+</div>
+<script>
+new QRCode(document.getElementById("qr"), {
+  text: "https://arturosfastfood0520.github.io/arturos-fast-food/carta.html",
+  width: 200,
+  height: 200,
+  colorDark: "#e8521a",
+  colorLight: "#ffffff",
+  correctLevel: QRCode.CorrectLevel.H
+});
+</script>
+</body>
+</html>

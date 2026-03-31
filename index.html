@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="theme-color" content="#e8521a">
+<title>Arturo's Fast Food — Pide aquí</title>
+<link rel="manifest" href="manifest.json">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f0e0c;--s:#1a1916;--s2:#242220;--b:#2e2c29;--a:#e8521a;--a2:#f5a623;--t:#f0ede8;--m:#7a7670;--g:#4caf72;--r:#e85555;--wa:#25D366;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow-x:hidden;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;-webkit-overflow-scrolling:touch;overflow-y:auto;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(15,14,12,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--b);}
+.nav-top{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;}
+.logo{font-family:'Syne',sans-serif;font-weight:900;font-size:.92rem;color:var(--a);line-height:1.1;}
+.logo small{color:var(--m);font-size:.55rem;display:block;font-family:'DM Sans',sans-serif;font-weight:400;}
+.nav-acts{display:flex;align-items:center;gap:8px;}
+.cart-btn{position:relative;padding:9px 16px;background:var(--s2);border:1px solid var(--b);border-radius:9px;color:var(--t);font-size:.82rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px;}
+.cart-btn .badge{position:absolute;top:-6px;right:-6px;background:var(--a);color:#fff;border-radius:99px;font-size:.6rem;font-weight:800;padding:2px 6px;min-width:18px;text-align:center;display:none;}
+
+/* CATEGORY NAV */
+.cat-nav{position:fixed;top:52px;left:0;right:0;z-index:99;background:var(--bg);}
+.back-btn{display:none;padding:12px 16px;background:var(--s);border:none;border-bottom:1px solid var(--b);color:var(--a);font-size:.88rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%;text-align:left;}
+.back-btn.show{display:block;}
+.cats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 16px;border-bottom:1px solid var(--b);background:var(--bg);}
+.cat-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 8px;background:var(--s);border:1px solid var(--b);border-radius:14px;cursor:pointer;transition:all .2s ease;overflow:hidden;}
+.cat-btn:active{transform:scale(0.96);}
+.cat-btn .cat-img{width:48px;height:48px;border-radius:10px;object-fit:cover;}
+.cat-btn .cat-emoji{font-size:2rem;line-height:1;}
+.cat-btn .cat-name{font-size:.78rem;font-weight:600;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-align:center;}
+.cat-btn.on{background:rgba(232,82,26,.12);border-color:rgba(232,82,26,.5);}
+.cat-btn.on .cat-name{color:var(--a);}
+
+/* PROMO & PLATO */
+#promo-area{margin:12px 16px 0;}
+.pb{background:linear-gradient(135deg,rgba(232,82,26,.14),rgba(245,166,35,.07));border:1px solid rgba(232,82,26,.3);border-radius:14px;padding:14px 16px;cursor:pointer;position:relative;overflow:hidden;}
+.pb-lbl{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--a);margin-bottom:4px;}
+.pb-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;margin-bottom:2px;}
+.pb-msg{font-size:.76rem;color:var(--m);}
+.pb-disc{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-family:'Syne',sans-serif;font-size:1.7rem;font-weight:900;color:var(--a);line-height:1;}
+.pb-disc small{font-size:.7rem;display:block;text-align:center;}
+#plato-area{margin:10px 16px 0;}
+.plato{background:linear-gradient(135deg,#1c1008,#2d1a06);border:1px solid rgba(245,166,35,.3);border-radius:16px;padding:16px;cursor:pointer;}
+.plato-badge{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--a2);margin-bottom:5px;}
+.plato-name{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:3px;}
+.plato-desc{font-size:.76rem;color:var(--m);margin-bottom:8px;}
+.plato-prices{display:flex;align-items:baseline;gap:8px;}
+.plato-old{font-size:.88rem;color:var(--m);text-decoration:line-through;}
+.plato-new{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:900;color:var(--g);}
+.plato-save{background:rgba(76,175,114,.15);border:1px solid rgba(76,175,114,.3);color:var(--g);font-size:.63rem;font-weight:700;padding:2px 8px;border-radius:99px;}
+
+/* HERO */
+.cat-hero{position:relative;height:140px;margin:12px 16px 0;border-radius:16px;overflow:hidden;background:var(--s);}
+.ch-img{width:100%;height:100%;object-fit:cover;}
+.ch-emoji{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:4rem;background:linear-gradient(135deg,var(--s),var(--s2));}
+.ch-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.72) 0%,transparent 55%);}
+.ch-label{position:absolute;bottom:12px;left:16px;}
+.ch-name{font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:900;}
+.ch-count{font-size:.7rem;color:rgba(255,255,255,.55);margin-top:1px;}
+
+/* PRODUCT LIST — no photos in individual products */
+.prod-list{padding:10px 16px 30px;}
+.pi{background:var(--s);border:1px solid var(--b);border-radius:14px;margin-bottom:9px;overflow:hidden;display:flex;align-items:stretch;}
+.pi.inc{border-color:rgba(232,82,26,.4);}
+.pi-body{flex:1;padding:11px 13px;display:flex;flex-direction:column;justify-content:center;}
+.pi-name{font-weight:600;font-size:.88rem;line-height:1.2;margin-bottom:2px;}
+.pi-desc{font-size:.7rem;color:var(--m);line-height:1.35;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.pi-foot{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.pi-price{font-family:'Syne',sans-serif;font-size:.92rem;font-weight:800;color:var(--a2);}
+.pi-old{font-size:.65rem;color:var(--m);text-decoration:line-through;display:block;}
+.pi-tag{background:var(--a);color:#fff;font-size:.52rem;font-weight:700;padding:2px 5px;border-radius:99px;}
+.ab{width:30px;height:30px;border-radius:8px;background:var(--a);border:none;color:#fff;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ab:hover{background:#ff6633;}
+.qc{display:flex;align-items:center;gap:4px;}
+.qb{width:26px;height:26px;border-radius:6px;border:1px solid var(--b);background:var(--s2);color:var(--t);font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.qb:hover{background:var(--a);border-color:var(--a);}
+.qn{font-weight:700;font-size:.85rem;min-width:14px;text-align:center;color:var(--a);}
+.szbar{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:5px;}
+.sz{padding:2px 6px;border-radius:4px;font-size:.58rem;font-weight:700;border:1px solid var(--b);color:var(--m);cursor:pointer;background:transparent;font-family:'DM Sans',sans-serif;}
+.sz.active{background:var(--a);border-color:var(--a);color:#fff;}
+
+/* COMBO OPTION */
+.combo-bar{margin-top:5px;margin-bottom:5px;}
+.combo-btn{padding:5px 10px;border-radius:6px;font-size:.7rem;font-weight:700;border:1px dashed var(--a2);color:var(--a2);cursor:pointer;background:transparent;font-family:'DM Sans',sans-serif;}
+.combo-btn.active{background:rgba(245,166,35,.15);border-style:solid;}
+
+/* VIEWS */
+.view{display:none;}
+.view.active{display:block;}
+#view-menu{padding-top:0;}
+#view-cart{padding-top:52px;}
+
+/* CART VIEW */
+.cv{max-width:550px;margin:0 auto;padding:15px;}
+.cv h2{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;}
+.empty{text-align:center;padding:55px 20px;color:var(--m);}
+.empty .big{font-size:2.6rem;margin-bottom:9px;}
+.citems{display:flex;flex-direction:column;gap:6px;margin-bottom:16px;}
+.ci{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:8px;}
+.cif{flex:1;}
+.cn{font-weight:600;font-size:.82rem;}
+.cp{color:var(--a2);font-size:.8rem;font-weight:700;}
+.combo-tag{font-size:.65rem;color:var(--g);background:rgba(76,175,114,.1);padding:1px 6px;border-radius:4px;display:inline-block;margin-top:2px;}
+.cn2{margin-top:3px;}
+.cn2 input{background:var(--s2);border:1px solid var(--b);border-radius:5px;color:var(--t);font-size:.7rem;padding:3px 7px;width:100%;font-family:'DM Sans',sans-serif;}
+.cn2 input:focus{outline:none;border-color:var(--a);}
+.cq{display:flex;align-items:center;gap:4px;flex-shrink:0;}
+.rb{background:none;border:none;color:var(--m);cursor:pointer;font-size:.88rem;padding:3px;}
+.rb:hover{color:var(--r);}
+.csec{background:var(--s);border:1px solid var(--b);border-radius:11px;padding:13px;margin-bottom:11px;}
+.csec h3{font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--m);margin-bottom:10px;}
+.fr{display:flex;flex-direction:column;gap:4px;margin-bottom:8px;}
+.fr label{font-size:.7rem;color:var(--m);font-weight:500;}
+.fr input{background:var(--s2);border:1px solid var(--b);border-radius:7px;color:var(--t);font-size:.86rem;padding:8px 10px;font-family:'DM Sans',sans-serif;}
+.fr input:focus{outline:none;border-color:var(--a);}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.po{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+.opt{background:var(--s2);border:2px solid var(--b);border-radius:8px;padding:7px 5px;text-align:center;cursor:pointer;}
+.opt.sel{border-color:var(--a);background:rgba(232,82,26,.08);}
+.opt .pii{font-size:1.15rem;margin-bottom:2px;}
+.opt .pl{font-size:.63rem;font-weight:600;color:var(--m);}
+.opt.sel .pl{color:var(--a);}
+.os{background:var(--s2);border-radius:9px;padding:11px;}
+.sr{display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:5px;color:var(--m);}
+.sr.tot{color:var(--t);font-weight:700;font-size:.9rem;border-top:1px solid var(--b);padding-top:8px;margin-top:3px;}
+.sr.tot .val{color:var(--a2);font-family:'Syne',sans-serif;}
+.warn{background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:7px;padding:8px 10px;font-size:.72rem;color:var(--a2);margin-top:8px;}
+.obtn{width:100%;padding:14px;background:var(--a);color:#fff;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-size:.95rem;font-weight:800;cursor:pointer;margin-top:6px;}
+.obtn:hover{background:#ff6633;}
+
+/* MODAL */
+.modal{display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;background:rgba(0,0,0,.78);backdrop-filter:blur(4px);}
+.modal.show{display:flex;}
+.mbox{background:var(--s);border:1px solid var(--b);border-radius:16px;padding:24px 20px;text-align:center;max-width:300px;width:92%;animation:popIn .3s ease;}
+@keyframes popIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.mbox h3{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:6px;}
+.mbox p{color:var(--m);font-size:.8rem;line-height:1.5;}
+.mnum{font-family:'Syne',sans-serif;font-size:1.7rem;font-weight:800;color:var(--a);margin:8px 0;}
+.mbtns{display:flex;flex-direction:column;gap:7px;margin-top:14px;}
+.mcls{padding:9px 22px;background:var(--s2);border:1px solid var(--b);color:var(--t);border-radius:8px;font-family:'Syne',sans-serif;font-weight:800;cursor:pointer;font-size:.85rem;}
+.mwa{display:flex;align-items:center;justify-content:center;gap:6px;padding:12px 22px;background:var(--wa);color:#fff;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:800;cursor:pointer;font-size:.88rem;text-decoration:none;}
+
+/* POPUP */
+.pop-ov{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .3s;}
+.pop-ov.show{opacity:1;pointer-events:all;}
+.pop-box{background:var(--s);border-radius:22px;max-width:420px;width:100%;overflow:hidden;transform:scale(.88);transition:transform .3s cubic-bezier(.32,.72,0,1);}
+.pop-ov.show .pop-box{transform:scale(1);}
+.pop-img{width:100%;height:200px;display:flex;align-items:center;justify-content:center;font-size:6rem;background:linear-gradient(135deg,#1a0f0a,#2d1208);}
+.pop-body{padding:18px;}
+.pop-badge{display:inline-block;background:var(--a);color:#fff;font-size:.6rem;font-weight:700;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;}
+.pop-title{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:900;margin-bottom:5px;}
+.pop-msg{font-size:.8rem;color:var(--m);line-height:1.5;margin-bottom:12px;}
+.pop-disc{font-family:'Syne',sans-serif;font-size:2.5rem;font-weight:900;color:var(--a);text-align:center;margin-bottom:12px;}
+.pop-disc small{font-size:1rem;}
+.pop-close{width:100%;padding:11px;background:transparent;border:1px solid var(--b);border-radius:11px;color:var(--m);font-size:.8rem;cursor:pointer;font-family:'DM Sans',sans-serif;}
+
+/* SPLASH */
+#splash{position:fixed;inset:0;z-index:500;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;transition:opacity .5s;}
+#splash.hide{opacity:0;pointer-events:none;}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* TOAST */
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--s2);border:1px solid var(--b);border-radius:9px;padding:9px 15px;font-size:.8rem;opacity:0;transition:all .3s;pointer-events:none;z-index:999;white-space:nowrap;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#toast.er{border-color:var(--r);color:var(--r);}
+
+@media(max-width:600px){.fg{grid-template-columns:1fr;}.po{grid-template-columns:repeat(2,1fr);}}
+</style>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import{getDatabase,ref,push,set,onValue}from'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+const fbApp=initializeApp({databaseURL:'https://arturos-fast-food-default-rtdb.firebaseio.com'});
+const fbDb=getDatabase(fbApp);
+window._db=fbDb;window._ref=ref;window._onValue=onValue;window._fbReady=true;
+window.saveToFirebase=function(order,callback){
+  var counterRef=ref(fbDb,'config/orderCounter');
+  onValue(counterRef,function(snap){
+    var current=snap.val()||200;var newNum=current+1;
+    set(counterRef,newNum);
+    order.id='#'+newNum;
+    var newRef=push(ref(fbDb,'pedidos'));
+    set(newRef,order).then(function(){if(callback)callback(newRef.key,order.id);});
+  },{onlyOnce:true});
+};
+// Register SW v3 and force cleanup of old SWs
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    regs.forEach(function(r){ r.unregister(); });
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
+</script>
+</head>
+<body>
+
+<div id="splash">
+  <div style="font-size:4rem;margin-bottom:16px;animation:bounce 1s ease infinite alternate;">🍔</div>
+  <h1 style="font-family:'Syne',sans-serif;font-size:2.3rem;font-weight:900;letter-spacing:-1px;line-height:1;">Arturo's<br><span style="color:var(--a);">Fast Food</span></h1>
+  <p style="color:var(--m);font-size:.85rem;margin-top:8px;margin-bottom:6px;line-height:1.5;">Soledad, Atlántico · Cra 41G #44-69 El Parque<br>📞 300 3585092</p>
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:32px;">
+    <span style="width:8px;height:8px;border-radius:50%;background:var(--g);animation:pulse 1.5s infinite;display:inline-block;"></span>
+    <span style="font-size:.8rem;color:var(--g);font-weight:600;">Abierto · 25-40 min</span>
+  </div>
+  <button id="open-btn" style="padding:17px 44px;background:var(--a);color:#fff;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;cursor:pointer;box-shadow:0 10px 30px rgba(232,82,26,.4);width:100%;max-width:320px;">🍽️ Ver Menú y Pedir</button>
+  <a href="https://wa.me/573003585092" target="_blank" style="margin-top:14px;display:flex;align-items:center;gap:6px;color:var(--m);font-size:.78rem;text-decoration:none;">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    Contáctanos por WhatsApp
+  </a>
+</div>
+
+<div id="main" style="display:none;">
+  <nav id="main-nav">
+    <div class="nav-top">
+      <div class="logo">🍔 Arturo's Fast Food<small>Soledad · Pedidos a domicilio</small></div>
+      <div class="nav-acts">
+        <button class="cart-btn" onclick="showCart()">🛒 Pedido <span class="badge" id="cb">0</span></button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="view active" id="view-menu">
+    <div class="cat-nav" id="cat-nav">
+      <button class="back-btn" id="back-btn" onclick="openCats()">← Atrás · Ver categorías</button>
+      <div class="cats-grid" id="cats-grid"></div>
+    </div>
+    <div id="menu-content">
+      <div id="plato-area"></div>
+      <div id="promo-area"></div>
+      <div id="cat-hero"></div>
+      <div class="prod-list" id="prod-list"></div>
+    </div>
+  </div>
+
+  <div class="view" id="view-cart">
+    <div class="cv">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:15px;padding-top:8px;">
+        <button onclick="showMenu()" style="background:none;border:1px solid var(--b);border-radius:8px;padding:6px 10px;color:var(--a);cursor:pointer;font-size:.82rem;font-weight:600;">← Menú</button>
+        <h2 style="margin:0;">Tu Pedido</h2>
+      </div>
+      <div id="cart-content"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="mbox">
+    <div style="font-size:2.5rem;margin-bottom:8px;">🎉</div>
+    <h3>¡Pedido recibido!</h3>
+    <div class="mnum" id="mnum">#...</div>
+    <p>Estamos preparando tu pedido. En 25-40 min llega a tu puerta.</p>
+    <p style="margin-top:5px;font-size:.72rem;color:var(--m)">¿Dudas? <strong style="color:var(--t)">300 3585092</strong></p>
+    <div class="mbtns">
+      <a class="mwa" id="mwa" href="#" target="_blank">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Confirmar por WhatsApp
+      </a>
+      <button class="mcls" onclick="closeModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="pop-ov" id="pop-ov">
+  <div class="pop-box">
+    <div class="pop-img" id="pop-img"></div>
+    <div class="pop-body">
+      <span class="pop-badge" id="pop-badge"></span>
+      <div class="pop-title" id="pop-title"></div>
+      <div class="pop-msg" id="pop-msg"></div>
+      <div class="pop-disc" id="pop-disc"></div>
+      <button class="pop-close" onclick="closePop()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+var WA_REST='573003585092';
+var cart={},activeCat='',selectedPay='efectivo',tipoEntrega='domicilio';
+var formData={fn:'',fp:'',fa:'',barrio:'',ref:'',hora:''};
+var MENU=[],PROMOS={},CAT_IMGS={},catsExpanded=true;
+var COMBO_CATS=['Perros Calientes','Hamburguesas','Sandwich'];
+var COMBO_PRICE=5000;
+var COMBO_DESC='Papas + Gaseosa personal';
+var selectedSizes={}; // Track size selection per product key before adding to cart
+
+function fmt(n){return '$'+(n||0).toLocaleString('es-CO');}
+function waitDB(cb){if(window._fbReady)cb();else setTimeout(function(){waitDB(cb);},100);}
+function showToast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className='show '+(type||'');clearTimeout(t._t);t._t=setTimeout(function(){t.className='';},2600);}
+function updateBadge(){var c=0;Object.values(cart).forEach(function(i){c+=i.qty;});var b=document.getElementById('cb');b.textContent=c;b.style.display=c>0?'inline-block':'none';}
+
+// Dynamic padding based on cat-nav height
+function updateMenuPadding(){
+  var catNav=document.getElementById('cat-nav');
+  var mc=document.getElementById('menu-content');
+  if(catNav&&mc){mc.style.paddingTop=(52+catNav.offsetHeight)+'px';}
+}
+
+document.getElementById('open-btn').onclick=function(){
+  var sp=document.getElementById('splash');sp.classList.add('hide');
+  setTimeout(function(){sp.style.display='none';document.getElementById('main').style.display='block';loadData();setTimeout(updateMenuPadding,150);},500);
+};
+
+function showMenu(){
+  document.getElementById('view-menu').classList.add('active');
+  document.getElementById('view-cart').classList.remove('active');
+  document.getElementById('cat-nav').style.display='block';
+  setTimeout(updateMenuPadding,50);
+  window.scrollTo({top:0});
+}
+function showCart(){
+  document.getElementById('view-cart').classList.add('active');
+  document.getElementById('view-menu').classList.remove('active');
+  document.getElementById('cat-nav').style.display='none';
+  renderCart();
+  window.scrollTo({top:0});
+}
+
+// CATEGORY NAV
+function openCats(){
+  catsExpanded=true;
+  document.getElementById('cats-grid').style.display='grid';
+  document.getElementById('back-btn').classList.remove('show');
+  setTimeout(updateMenuPadding,50);
+}
+function switchCat(cat){
+  activeCat=cat;
+  document.querySelectorAll('.cat-btn').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-cat')===cat);});
+  catsExpanded=false;
+  document.getElementById('cats-grid').style.display='none';
+  document.getElementById('back-btn').classList.add('show');
+  renderHero();renderProds();
+  setTimeout(updateMenuPadding,50);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+// DATA
+function loadData(){waitDB(function(){
+  window._onValue(window._ref(window._db,'menu'),function(snap){var d=snap.val();if(d&&Object.keys(d).length>0){MENU=Object.entries(d).map(function(e){return Object.assign({key:e[0]},e[1]);});}renderAll();});
+  window._onValue(window._ref(window._db,'promos'),function(snap){PROMOS=snap.val()||{};renderBanner();renderPlato();checkPop();});
+  window._onValue(window._ref(window._db,'cat_imgs'),function(snap){CAT_IMGS=snap.val()||{};renderAll();});
+  window._onValue(window._ref(window._db,'config/combo'),function(snap){var c=snap.val();if(c){if(c.price)COMBO_PRICE=c.price;if(c.desc)COMBO_DESC=c.desc;}},{onlyOnce:true});
+});}
+
+function getCats(){var c=[];MENU.forEach(function(i){if(c.indexOf(i.cat)===-1)c.push(i.cat);});return c;}
+function getEmoji(cat){var item=MENU.find(function(i){return i.cat===cat;});return item?item.e:'🍽️';}
+function getPromo(key,cat){if(PROMOS['item_'+key]&&PROMOS['item_'+key].active)return PROMOS['item_'+key];if(PROMOS['cat_'+cat]&&PROMOS['cat_'+cat].active)return PROMOS['cat_'+cat];return null;}
+
+function renderAll(){
+  var cats=getCats();if(!activeCat&&cats.length)activeCat=cats[0];
+  var grid=document.getElementById('cats-grid');
+  grid.innerHTML=cats.map(function(c){
+    var ci=CAT_IMGS[c];var hasImg=ci&&ci.url;var emoji=getEmoji(c);
+    var imgPart=hasImg?"<img class='cat-img' src='"+ci.url+"' onerror=\"this.style.display='none';this.nextElementSibling.style.display='block'\"><span class='cat-emoji' style='display:none;'>"+emoji+"</span>":"<span class='cat-emoji'>"+emoji+"</span>";
+    return "<button class='cat-btn"+(c===activeCat?' on':'')+"' data-cat='"+c+"'>"+imgPart+"<span class='cat-name'>"+c+"</span></button>";
+  }).join('');
+  grid.onclick=function(e){var btn=e.target.closest('[data-cat]');if(btn)switchCat(btn.getAttribute('data-cat'));};
+  renderHero();renderProds();setTimeout(updateMenuPadding,50);
+}
+
+function renderHero(){
+  var el=document.getElementById('cat-hero');if(!el)return;
+  var ci=CAT_IMGS[activeCat];var count=MENU.filter(function(i){return i.cat===activeCat;}).length;
+  var hasImg=ci&&ci.url;
+  var inner=hasImg?"<img class='ch-img' src='"+ci.url+"'>":"<div class='ch-emoji'>"+getEmoji(activeCat)+"</div>";
+  el.innerHTML="<div class='cat-hero'>"+inner+"<div class='ch-overlay'></div><div class='ch-label'><div class='ch-name'>"+activeCat+"</div><div class='ch-count'>"+count+" producto"+(count!==1?"s":"")+"</div></div></div>";
+}
+
+function renderProds(){
+  var items=MENU.filter(function(i){return i.cat===activeCat;});
+  var list=document.getElementById('prod-list');
+  var canCombo=COMBO_CATS.indexOf(activeCat)!==-1;
+  var html='';
+  items.forEach(function(item){
+    var ci=cart[item.key];var qty=ci?ci.qty:0;
+    var pr=getPromo(item.key,item.cat);
+    var hasSz=item.sz&&Object.keys(item.sz).length>0;
+    var sk=hasSz?Object.keys(item.sz):[];
+    var ss=(ci&&ci.ss)?ci.ss:(selectedSizes[item.key]||(sk[0]||null));
+    var base=hasSz?(item.sz[ss]||item.p):item.p;
+    var fp=pr?Math.round(base*(1-pr.disc/100)):base;
+    var hasD=pr&&pr.disc>0;
+    var isCombo=ci&&ci.combo;
+
+    var szHtml='';
+    if(hasSz){sk.forEach(function(s){szHtml+='<button class="sz '+(ss===s?'active':'')+'" onclick="setSz(\''+item.key+'\',\''+s+'\');event.stopPropagation()">'+s+'</button>';});szHtml='<div class="szbar">'+szHtml+'</div>';}
+
+    var comboHtml='';
+    if(canCombo&&qty>0){comboHtml='<div class="combo-bar"><button class="combo-btn '+(isCombo?'active':'')+'" onclick="toggleCombo(\''+item.key+'\');event.stopPropagation()">🍟 '+COMBO_DESC+' +'+fmt(COMBO_PRICE)+'</button></div>';}
+
+    var qHtml=qty>0
+      ?'<div class="qc" onclick="event.stopPropagation()"><button class="qb" onclick="removeItem(\''+item.key+'\')">-</button><span class="qn">'+qty+'</span><button class="qb" onclick="addItem(\''+item.key+'\')">+</button></div>'
+      :'<button class="ab" onclick="addItem(\''+item.key+'\');event.stopPropagation()">+</button>';
+
+    html+='<div class="pi '+(qty>0?'inc':'')+'">'
+      +'<div class="pi-body">'
+      +'<div class="pi-name">'+item.n+'</div>'
+      +(item.d?'<div class="pi-desc">'+item.d+'</div>':'')
+      +szHtml+comboHtml
+      +'<div class="pi-foot">'
+      +'<div>'+(hasD?'<span class="pi-old">'+fmt(base)+'</span>':'')+'<span class="pi-price">'+fmt(fp)+(isCombo?' <span style="color:var(--g);font-size:.65rem;">+combo</span>':'')+'</span>'+(hasD?' <span class="pi-tag">-'+pr.disc+'%</span>':'')+'</div>'
+      +qHtml
+      +'</div></div></div>';
+  });
+  list.innerHTML=html;
+}
+
+// PROMO/PLATO
+function renderBanner(){var b=PROMOS.banner;var el=document.getElementById('promo-area');if(b&&b.active){el.innerHTML="<div class='pb' onclick='showPop()'><div class='pb-lbl'>Promoción</div><div class='pb-title'>"+b.title+"</div><div class='pb-msg'>"+b.msg+"</div>"+(b.disc?"<div class='pb-disc'>"+b.disc+"<small>% OFF</small></div>":"")+"</div>";}else{el.innerHTML="";}}
+function renderPlato(){var pl=PROMOS.plato;var el=document.getElementById('plato-area');if(pl&&pl.active){var save=pl.price&&pl.special?Math.round((pl.price-pl.special)/pl.price*100):0;el.innerHTML="<div class='plato' onclick='openPlatoPop()'><div class='plato-badge'>⭐ Plato del día</div><div style='font-size:2.2rem;margin-bottom:6px;'>"+pl.emoji+"</div><div class='plato-name'>"+pl.name+"</div>"+(pl.desc?"<div class='plato-desc'>"+pl.desc+"</div>":"")+"<div class='plato-prices'>"+(pl.price?"<span class='plato-old'>"+fmt(pl.price)+"</span>":"")+"<span class='plato-new'>"+fmt(pl.special)+"</span>"+(save>0?"<span class='plato-save'>-"+save+"%</span>":"")+"</div></div>";}else{el.innerHTML="";}}
+function checkPop(){if(PROMOS.popup&&PROMOS.popup.active)setTimeout(showPop,1800);}
+function showPop(){var p=PROMOS.popup||PROMOS.banner;if(!p||!p.active)return;document.getElementById('pop-badge').textContent=p.badge||'Promoción';document.getElementById('pop-title').textContent=p.title||'';document.getElementById('pop-msg').textContent=p.msg||'';document.getElementById('pop-disc').innerHTML=p.disc?p.disc+"<small>% OFF</small>":'';document.getElementById('pop-img').innerHTML=p.imgUrl?"<img src='"+p.imgUrl+"' style='width:100%;height:100%;object-fit:cover;'>":"<div style='font-size:6rem;'>"+(p.emoji||'🎉')+"</div>";document.getElementById('pop-ov').classList.add('show');}
+function openPlatoPop(){var pl=PROMOS.plato;if(!pl)return;document.getElementById('pop-badge').textContent='⭐ Plato del día';document.getElementById('pop-title').textContent=pl.name||'';document.getElementById('pop-msg').textContent=pl.desc||'';document.getElementById('pop-disc').innerHTML=pl.special?"<span style='font-size:1.7rem;color:var(--g)'>"+fmt(pl.special)+"</span>":'';document.getElementById('pop-img').innerHTML="<div style='font-size:7rem;'>"+pl.emoji+"</div>";document.getElementById('pop-ov').classList.add('show');}
+function closePop(){document.getElementById('pop-ov').classList.remove('show');}
+
+// CART LOGIC
+function setSz(key,s){selectedSizes[key]=s;if(cart[key])cart[key].ss=s;renderProds();}
+function toggleCombo(key){if(cart[key])cart[key].combo=!cart[key].combo;updateBadge();renderProds();}
+
+function addItem(key){
+  var item=MENU.find(function(i){return i.key===key;});if(!item)return;
+  if(!cart[key]){var ss=selectedSizes[key]||(item.sz?Object.keys(item.sz)[0]:null);cart[key]={key:item.key,n:item.n,cat:item.cat,p:item.p,sz:item.sz||null,qty:0,note:'',ss:ss,combo:false};}
+  cart[key].qty++;updateBadge();renderProds();
+}
+function removeItem(key){
+  if(!cart[key])return;cart[key].qty--;if(cart[key].qty<=0)delete cart[key];updateBadge();renderProds();
+}
+
+function setPay(p){saveForm();selectedPay=p;renderCart();}
+function setTipo(t){saveForm();tipoEntrega=t;renderCart();}
+function saveForm(){
+  formData.fn=document.getElementById('fn')?document.getElementById('fn').value:'';
+  formData.fp=document.getElementById('fp')?document.getElementById('fp').value:'';
+  formData.fa=document.getElementById('fa')?document.getElementById('fa').value:'';
+  formData.barrio=document.getElementById('fbarrio')?document.getElementById('fbarrio').value:'';
+  formData.ref=document.getElementById('fref')?document.getElementById('fref').value:'';
+  formData.hora=document.getElementById('fhora')?document.getElementById('fhora').value:'';
+}
+
+function tipoSection(){
+  var d=tipoEntrega==='domicilio',r=tipoEntrega==='recoger',a=tipoEntrega==='adelantado';
+  var h='<div class="csec"><h3>Tipo de pedido</h3><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">';
+  h+='<div class="opt '+(d?'sel':'')+'" onclick="setTipo(\'domicilio\')"><div class="pii">🛵</div><div class="pl">Domicilio</div></div>';
+  h+='<div class="opt '+(r?'sel':'')+'" onclick="setTipo(\'recoger\')"><div class="pii">🏪</div><div class="pl">Recoger</div></div>';
+  h+='<div class="opt '+(a?'sel':'')+'" onclick="setTipo(\'adelantado\')"><div class="pii">⏰</div><div class="pl">Adelantado</div></div></div>';
+  if(a) h+='<div class="fr" style="margin-top:10px"><label>¿A qué hora llegas?</label><input id="fhora" type="time" value="'+formData.hora+'" oninput="formData.hora=this.value" style="background:var(--s2);border:1px solid var(--b);border-radius:7px;color:var(--t);font-size:.87rem;padding:8px 10px;width:100%;font-family:DM Sans,sans-serif;"></div>';
+  h+='</div><div class="csec"><h3>Tus datos</h3><div class="fg">';
+  h+='<div class="fr"><label>Nombre</label><input id="fn" type="text" placeholder="Tu nombre" value="'+formData.fn+'" oninput="formData.fn=this.value"></div>';
+  h+='<div class="fr"><label>Teléfono</label><input id="fp" type="tel" placeholder="300-000-0000" value="'+formData.fp+'" oninput="formData.fp=this.value"></div></div>';
+  if(d){
+    h+='<div class="fr"><label>Dirección</label><input id="fa" type="text" placeholder="Calle, Carrera, Apto" value="'+formData.fa+'" oninput="formData.fa=this.value"></div>';
+    h+='<div class="fr"><label>Barrio</label><input id="fbarrio" type="text" placeholder="Nombre del barrio" value="'+formData.barrio+'" oninput="formData.barrio=this.value"></div>';
+    h+='<div class="fr"><label>Referencia</label><input id="fref" type="text" placeholder="Color de puerta, edificio..." value="'+formData.ref+'" oninput="formData.ref=this.value"></div>';
+  } else {h+='<p style="font-size:.8rem;color:var(--g);margin-top:6px;padding:8px;background:rgba(76,175,114,.1);border-radius:8px;">✅ '+(r?'Pasa a recoger tu pedido al local 📍':'Tu pedido estará listo al llegar ⏰')+'</p>';}
+  h+='</div>';return h;
+}
+
+function renderCart(){
+  var items=Object.values(cart);var el=document.getElementById('cart-content');
+  if(!items.length){el.innerHTML='<div class="empty"><div class="big">🛒</div><p>Carrito vacío</p><p style="margin-top:6px;font-size:.74rem">Elige algo del menú</p></div>';return;}
+  var sub=0;
+  items.forEach(function(i){var pr=getPromo(i.key,i.cat);var base=i.sz?i.sz[i.ss||Object.keys(i.sz)[0]]:i.p;var fp=pr?Math.round(base*(1-pr.disc/100)):base;sub+=(fp+(i.combo?COMBO_PRICE:0))*i.qty;});
+  var itemsHtml='';
+  items.forEach(function(item){
+    var pr=getPromo(item.key,item.cat);var base=item.sz?item.sz[item.ss||Object.keys(item.sz)[0]]:item.p;var fp=pr?Math.round(base*(1-pr.disc/100)):base;var total=(fp+(item.combo?COMBO_PRICE:0))*item.qty;
+    itemsHtml+='<div class="ci"><div class="cif">'
+      +'<div class="cn">'+item.n+(item.ss?' · '+item.ss:'')+'</div>'
+      +'<div class="cp">'+fmt(total)+'</div>'
+      +(item.combo?'<span class="combo-tag">🍟 Combo (+'+fmt(COMBO_PRICE)+')</span>':'')
+      +'<div class="cn2"><input type="text" placeholder="Nota especial..." value="'+(item.note||'')+'" oninput="cart[\''+item.key+'\'].note=this.value"></div>'
+      +'</div><div class="cq">'
+      +'<button class="qb" onclick="removeItem(\''+item.key+'\');renderCart()">-</button>'
+      +'<span class="qn">'+item.qty+'</span>'
+      +'<button class="qb" onclick="addItem(\''+item.key+'\');renderCart()">+</button>'
+      +'<button class="rb" onclick="delete cart[\''+item.key+'\'];updateBadge();renderCart()">🗑</button>'
+      +'</div></div>';
+  });
+  var pays=['efectivo','transferencia','tarjeta','link'];var payIcons=['💵','🏦','💳','🔗'];var payLabels=['Efectivo','Transferencia','Tarjeta','Link de pago'];
+  var payHtml='';pays.forEach(function(p,i){payHtml+='<div class="opt '+(selectedPay===p?'sel':'')+'" onclick="setPay(\''+p+'\')"><div class="pii">'+payIcons[i]+'</div><div class="pl">'+payLabels[i]+'</div></div>';});
+  el.innerHTML='<div class="citems">'+itemsHtml+'</div>'+tipoSection()
+    +'<div class="csec"><h3>Método de pago</h3><div class="po">'+payHtml+'</div></div>'
+    +'<div class="os"><div class="sr"><span>Subtotal</span><span>'+fmt(sub)+'</span></div>'
+    +'<div class="sr"><span>🛵 Domicilio</span><span style="color:var(--a2)">Por confirmar</span></div>'
+    +'<div class="warn">⚠️ El valor del domicilio depende de tu barrio. Te lo confirmamos por WhatsApp.</div>'
+    +'<div class="sr tot" style="margin-top:10px"><span>Subtotal pedido</span><span class="val">'+fmt(sub)+'</span></div></div>'
+    +'<button class="obtn" onclick="placeOrder()">Confirmar pedido · '+fmt(sub)+'</button>';
+}
+
+// PLACE ORDER — tracking link goes in WhatsApp message
+function placeOrder(){
+  saveForm();
+  var tipoStr={domicilio:'🛵 DOMICILIO',recoger:'🏪 RECOGER EN LOCAL',adelantado:'⏰ ADELANTADO'};
+  var name=formData.fn.trim(),ph=formData.fp.trim(),addr=formData.fa.trim(),barrio=formData.barrio.trim();
+  if(!name){showToast('⚠️ Escribe tu nombre','er');return;}
+  if(!ph){showToast('⚠️ Escribe tu teléfono','er');return;}
+  if(tipoEntrega==='domicilio'&&!addr){showToast('⚠️ Escribe tu dirección','er');return;}
+  if(tipoEntrega==='domicilio'&&!barrio){showToast('⚠️ Escribe tu barrio','er');return;}
+  if(tipoEntrega==='adelantado'&&!formData.hora){showToast('⚠️ Indica la hora','er');return;}
+
+  var items=Object.values(cart);var sub=0;
+  var fbItems=items.map(function(i){
+    var pr=getPromo(i.key,i.cat);var base=i.sz?i.sz[i.ss||Object.keys(i.sz)[0]]:i.p;
+    var fp=pr?Math.round(base*(1-pr.disc/100)):base;
+    var unitPrice=fp+(i.combo?COMBO_PRICE:0);sub+=unitPrice*i.qty;
+    return{nombre:i.n+(i.combo?' + COMBO':''),qty:i.qty,ss:i.ss||'',note:i.note||'',precio:unitPrice};
+  });
+  var payMap={efectivo:'Efectivo',transferencia:'Transferencia',tarjeta:'Tarjeta',link:'Link de pago'};
+  var pay=payMap[selectedPay];
+  var tipoLabel={domicilio:'Domicilio',recoger:'Recoger en local',adelantado:'Adelantado ('+formData.hora+')'};
+
+  var lines='';fbItems.forEach(function(i){lines+='  - '+i.qty+'x '+i.nombre+(i.ss?' ('+i.ss+')':'')+(i.note?' - NOTA: '+i.note:'')+' '+fmt(i.precio*i.qty)+'\n';});
+
+  var fbOrder={id:'#...',cl:name,ph:ph,addr:addr||'',barrio:barrio||'',pay:pay,tipo:tipoLabel[tipoEntrega]||tipoEntrega,hora:formData.hora||'',st:'nuevo',t:Date.now(),dom:null,items:fbItems};
+
+  if(window.saveToFirebase){
+    window.saveToFirebase(fbOrder,function(fbKey,fbId){
+      document.getElementById('mnum').textContent=fbId;
+      var trackUrl='https://arturosfastfood0520.github.io/arturos-fast-food/seguimiento.html?key='+fbKey;
+      var finalMsg='🍔 *NUEVO PEDIDO '+fbId+'*\n'
+        +'Tipo: '+(tipoStr[tipoEntrega]||tipoEntrega)+'\n'
+        +'Cliente: '+name+'\nTel: '+ph+'\n'
+        +(tipoEntrega==='domicilio'?'Dirección: '+addr+'\nBarrio: '+barrio+'\n':'')
+        +'---\n*PRODUCTOS:*\n'+lines
+        +'---\nSubtotal: '+fmt(sub)+'\nDomicilio: PENDIENTE CONFIRMAR\nPago: '+pay
+        +'\n\n📍 *Para ver el estado de tu pedido entra aquí:*\n'+trackUrl;
+      document.getElementById('mwa').href='https://wa.me/'+WA_REST+'?text='+encodeURIComponent(finalMsg);
+    });
+  }
+  document.getElementById('mnum').textContent='...';
+  document.getElementById('mwa').href='#';
+  document.getElementById('modal').classList.add('show');
+  cart={};updateBadge();
+}
+function closeModal(){document.getElementById('modal').classList.remove('show');}
+</script>
+</body>
+</html>

@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Carta — Arturo's</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f0e0c;--a:#e8521a;--a2:#f5a623;--g:#4caf72;--r:#e05252;--t:#f0ede8;--m:#7a7670;--s:#1a1916;--s2:#242220;--b:#2e2c29;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;}
+.nav{position:fixed;top:0;left:0;right:0;background:rgba(15,14,12,.97);border-bottom:1px solid var(--b);display:flex;align-items:center;padding:0 6px;z-index:100;}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:.8rem;color:var(--a);padding:11px 8px;white-space:nowrap;line-height:1.2;}
+.logo small{display:block;font-size:.55rem;color:var(--m);font-family:'DM Sans',sans-serif;font-weight:400;}
+.tabs{display:flex;flex:1;overflow-x:auto;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex:1;padding:13px 4px;font-size:.62rem;font-weight:700;text-align:center;cursor:pointer;color:var(--m);border:none;background:transparent;white-space:nowrap;border-bottom:2px solid transparent;font-family:'DM Sans',sans-serif;}
+.tab.active{color:var(--a);border-bottom-color:var(--a);}
+.view{display:none;padding:56px 14px 30px;}
+.view.active{display:block;}
+.card{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:16px;margin-bottom:12px;}
+.card-title{font-family:'Syne',sans-serif;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--m);margin-bottom:12px;}
+.inp{width:100%;background:var(--s2);border:1px solid var(--b);border-radius:8px;color:var(--t);font-size:.85rem;padding:9px 11px;font-family:'DM Sans',sans-serif;}
+.inp:focus{outline:none;border-color:var(--a);}
+.lbl{font-size:.7rem;color:var(--m);display:block;margin-bottom:3px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
+.mb8{margin-bottom:8px;}
+.mb12{margin-bottom:12px;}
+.row{display:flex;gap:8px;}
+.btn{padding:10px 16px;border-radius:9px;font-size:.8rem;font-weight:700;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;}
+.btn-a{background:var(--a);color:#fff;}
+.btn-g{background:var(--g);color:#fff;}
+.btn-r{background:var(--r);color:#fff;}
+.btn-s{background:var(--s2);border:1px solid var(--b);color:var(--t);}
+.btn-full{width:100%;}
+.sw-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;}
+.sw{width:46px;height:26px;background:var(--b);border-radius:99px;position:relative;flex-shrink:0;transition:background .2s;}
+.sw.on{background:var(--g);}
+.sw::after{content:'';position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .2s;}
+.sw.on::after{transform:translateX(20px);}
+.sw-label{font-size:.88rem;font-weight:600;}
+.pcard{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:14px;margin-bottom:10px;}
+.pcard-head{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.catbar{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px;}
+.catbtn{padding:5px 12px;border-radius:99px;font-size:.7rem;font-weight:600;cursor:pointer;border:1px solid var(--b);background:transparent;color:var(--m);font-family:'DM Sans',sans-serif;}
+.catbtn.active{background:var(--a);border-color:var(--a);color:#fff;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--t);color:var(--bg);padding:10px 22px;border-radius:99px;font-size:.82rem;font-weight:600;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+.preview-box{background:linear-gradient(135deg,rgba(232,82,26,.12),rgba(245,166,35,.06));border:1px solid rgba(232,82,26,.25);border-radius:12px;padding:14px;margin-top:10px;}
+.img-preview{width:100%;height:120px;object-fit:cover;border-radius:8px;margin-top:6px;display:none;}
+.page-t{font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800;margin-bottom:4px;padding-top:4px;}
+.page-s{color:var(--m);font-size:.78rem;margin-bottom:14px;}
+#login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-box{background:var(--s);border:1px solid var(--b);border-radius:20px;padding:32px;max-width:300px;width:100%;text-align:center;}
+/* Upload button styles */
+.upload-area{position:relative;margin-bottom:8px;}
+.upload-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:var(--s2);border:2px dashed var(--b);border-radius:10px;color:var(--m);font-size:.82rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.upload-btn:hover,.upload-btn:active{border-color:var(--a);color:var(--a);}
+.upload-btn.uploading{border-color:var(--a2);color:var(--a2);pointer-events:none;}
+.upload-input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.upload-progress{display:none;align-items:center;gap:8px;padding:8px 0;}
+.upload-progress.show{display:flex;}
+.upload-bar{flex:1;height:6px;background:var(--b);border-radius:99px;overflow:hidden;}
+.upload-fill{height:100%;background:var(--a);border-radius:99px;transition:width .3s;width:0%;}
+.upload-status{font-size:.7rem;color:var(--m);}
+.img-current{width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px;display:none;border:1px solid var(--b);}
+.img-remove{position:absolute;top:4px;right:4px;width:24px;height:24px;background:rgba(224,82,82,.9);color:#fff;border:none;border-radius:50%;font-size:.7rem;cursor:pointer;display:none;align-items:center;justify-content:center;font-weight:700;}
+.img-wrap{position:relative;display:inline-block;width:100%;}
+</style>
+</head>
+<body>
+<div id="login-wrap">
+<div class="login-box">
+<div style="font-size:2.5rem;margin-bottom:10px;">🔐</div>
+<h1 style="font-family:'Syne',sans-serif;font-size:1.1rem;margin-bottom:20px;">Admin Carta</h1>
+<input id="pi" type="password" class="inp" placeholder="Clave" style="margin-bottom:10px;" onkeydown="if(event.key==='Enter')doLogin()">
+<button onclick="doLogin()" style="width:100%;padding:12px;background:var(--a);color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Entrar</button>
+</div>
+</div>
+
+<div id="app" style="display:none;">
+<nav class="nav">
+<div class="logo">🍔 Carta<small>Admin</small></div>
+<div class="tabs">
+<button class="tab active" id="tab-promos" onclick="showTab('promos')">🎉 Promos</button>
+<button class="tab" id="tab-plato" onclick="showTab('plato')">⭐ Plato día</button>
+<button class="tab" id="tab-imgs" onclick="showTab('imgs')">📸 Fotos</button>
+<button class="tab" id="tab-menu" onclick="showTab('menu')">🍽️ Menú</button>
+</div>
+</nav>
+
+<!-- PROMOS -->
+<div class="view active" id="view-promos">
+<div class="page-t">Promociones 🎉</div>
+<div class="page-s">Activa descuentos visibles en la carta.</div>
+<div class="card">
+<div class="card-title">📢 Popup de bienvenida</div>
+<div class="sw-row" onclick="toggle('popup')"><div class="sw" id="sw-popup"></div><span class="sw-label" id="lbl-popup">Desactivado</span></div>
+<div class="g2">
+<div><label class="lbl">Emoji</label><input class="inp" id="pp-e" type="text" placeholder="🎉" value="🎉"></div>
+<div><label class="lbl">Badge</label><input class="inp" id="pp-b" placeholder="Oferta especial"></div>
+</div>
+<div class="mb8"><label class="lbl">Título</label><input class="inp" id="pp-t" placeholder="¡Oferta de hoy!"></div>
+<div class="mb8"><label class="lbl">Mensaje</label><input class="inp" id="pp-m" placeholder="Aprovecha nuestros descuentos..."></div>
+<div class="mb8"><label class="lbl">URL imagen (opcional)</label><input class="inp" id="pp-img" placeholder="https://..." oninput="previewImg('pp-img','pp-imgprev')"></div>
+<img id="pp-imgprev" class="img-preview" alt="">
+<div class="mb12"><label class="lbl">Descuento %</label><input class="inp" id="pp-d" type="number" placeholder="20" min="0" max="99"></div>
+<button class="btn btn-g btn-full" onclick="savePromo('popup')">💾 Guardar popup</button>
+</div>
+<div class="card">
+<div class="card-title">🏷️ Banner en el menú</div>
+<div class="sw-row" onclick="toggle('banner')"><div class="sw" id="sw-banner"></div><span class="sw-label" id="lbl-banner">Desactivado</span></div>
+<div class="mb8"><label class="lbl">Título</label><input class="inp" id="bn-t" placeholder="¡Descuento especial!"></div>
+<div class="mb8"><label class="lbl">Mensaje</label><input class="inp" id="bn-m" placeholder="Hoy en hamburguesas..."></div>
+<div class="mb12"><label class="lbl">Descuento %</label><input class="inp" id="bn-d" type="number" placeholder="15" min="0" max="99"></div>
+<button class="btn btn-g btn-full" onclick="savePromo('banner')">💾 Guardar banner</button>
+</div>
+<div class="card">
+<div class="card-title">🏷️ Descuento por categoría</div>
+<div class="mb8"><label class="lbl">Categoría</label><select class="inp" id="cat-sel" style="cursor:pointer;"><option>Cargando...</option></select></div>
+<div class="mb12"><label class="lbl">Descuento %</label><input class="inp" id="cat-d" type="number" placeholder="10" min="0" max="99"></div>
+<div class="row">
+<button class="btn btn-g" style="flex:1;" onclick="saveCatDisc()">Aplicar</button>
+<button class="btn btn-r" onclick="removeCatDisc()">Quitar</button>
+</div>
+</div>
+</div>
+
+<!-- PLATO DÍA -->
+<div class="view" id="view-plato">
+<div class="page-t">Plato del día ⭐</div>
+<div class="page-s">Destaca un producto con precio especial.</div>
+<div class="card">
+<div class="sw-row" onclick="toggle('plato')"><div class="sw" id="sw-plato"></div><span class="sw-label" id="lbl-plato">Desactivado</span></div>
+<div class="g2">
+<div><label class="lbl">Emoji</label><input class="inp" id="pl-e" placeholder="🍔"></div>
+<div><label class="lbl">Nombre</label><input class="inp" id="pl-n" placeholder="Hamburguesa Especial"></div>
+<div><label class="lbl">Precio normal</label><input class="inp" id="pl-p" type="number" placeholder="34000"></div>
+<div><label class="lbl">Precio especial</label><input class="inp" id="pl-s" type="number" placeholder="28000"></div>
+</div>
+<div class="mb8"><label class="lbl">URL imagen (opcional)</label><input class="inp" id="pl-img" placeholder="https://..." oninput="previewImg('pl-img','pl-imgprev')"></div>
+<img id="pl-imgprev" class="img-preview" alt="">
+<div class="mb12"><label class="lbl">Descripción</label><input class="inp" id="pl-d" placeholder="Solo hoy disponible..."></div>
+<button class="btn btn-g btn-full" onclick="savePlato()">💾 Publicar plato del día</button>
+</div>
+</div>
+
+<!-- FOTOS POR CATEGORÍA -->
+<div class="view" id="view-imgs">
+<div class="page-t">Fotos de categorías 📸</div>
+<div class="page-s">Sube fotos reales de tus platos. Se muestran en los botones de la carta.</div>
+<div id="imgs-list"></div>
+</div>
+
+<!-- MENÚ -->
+<div class="view" id="view-menu">
+<div class="page-t">Gestión de Menú 🍽️</div>
+<div class="page-s">Edita precios, nombres o agrega productos.</div>
+<button onclick="showAddF()" style="width:100%;padding:11px;background:var(--a);border:none;border-radius:10px;color:#fff;font-family:'Syne',sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;margin-bottom:12px;">+ Agregar producto</button>
+<div id="add-f" style="display:none;" class="card">
+<div class="card-title">➕ Nuevo producto</div>
+<div class="g2">
+<div><label class="lbl">Nombre</label><input class="inp" id="nf-n" type="text" placeholder="Nombre"></div>
+<div><label class="lbl">Categoría</label><input class="inp" id="nf-c" type="text" placeholder="Pizzas"></div>
+<div><label class="lbl">Precio</label><input class="inp" id="nf-p" type="number" placeholder="25000"></div>
+<div><label class="lbl">Emoji</label><input class="inp" id="nf-e" type="text" placeholder="🍕"></div>
+</div>
+<div class="mb8"><label class="lbl">Descripción</label><input class="inp" id="nf-d" placeholder="Ingredientes..."></div>
+<div class="row">
+<button onclick="addProd()" class="btn btn-g" style="flex:1;">Guardar</button>
+<button onclick="document.getElementById('add-f').style.display='none'" class="btn btn-s">✕</button>
+</div>
+</div>
+<div class="catbar" id="mcats"></div>
+<div id="mprod"></div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import{getDatabase,ref,set,update,onValue}from'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+const app=initializeApp({databaseURL:'https://arturos-fast-food-default-rtdb.firebaseio.com'});
+const db=getDatabase(app);
+window._db=db;window._ref=ref;window._set=set;window._update=update;window._onValue=onValue;window._fbReady=true;
+</script>
+
+<script>
+var PASS='arturo2024',PS={},MD=[],MC='';
+var IMGBB_KEY='c34583801e08af390a9a4232b5a46985';
+
+function toast(m){var el=document.getElementById('toast');el.textContent=m;el.classList.add('show');setTimeout(function(){el.classList.remove('show');},2500);}
+function waitDB(cb){if(window._fbReady)cb();else setTimeout(function(){waitDB(cb);},100);}
+function fmt(n){return '$'+(n||0).toLocaleString('es-CO');}
+
+function doLogin(){
+if(document.getElementById('pi').value===PASS){
+document.getElementById('login-wrap').style.display='none';
+document.getElementById('app').style.display='block';
+init();
+}else{toast('Clave incorrecta');}
+}
+
+function showTab(v){
+document.querySelectorAll('.view').forEach(function(e){e.classList.remove('active');});
+document.querySelectorAll('.tab').forEach(function(e){e.classList.remove('active');});
+document.getElementById('view-'+v).classList.add('active');
+document.getElementById('tab-'+v).classList.add('active');
+if(v==='menu')loadMenu();
+if(v==='imgs')renderImgs();
+}
+
+function init(){
+waitDB(function(){
+window._onValue(window._ref(window._db,'promos'),function(snap){
+PS=snap.val()||{};
+fillForms();
+});
+window._onValue(window._ref(window._db,'menu'),function(snap){
+var d=snap.val()||{};
+MD=Object.entries(d).map(function(e){return Object.assign({key:e[0]},e[1]);});
+var cats=[];MD.forEach(function(i){if(cats.indexOf(i.cat)===-1)cats.push(i.cat);});
+var sel=document.getElementById('cat-sel');
+sel.innerHTML=cats.map(function(c){return'<option value="'+c+'">'+c+'</option>';}).join('');
+},{onlyOnce:true});
+});
+}
+
+function fillForms(){
+['popup','banner','plato'].forEach(function(k){
+var sw=document.getElementById('sw-'+k);
+var lb=document.getElementById('lbl-'+k);
+if(!sw)return;
+var on=PS[k]&&PS[k].active;
+sw.classList.toggle('on',!!on);
+lb.textContent=on?'Activo':'Desactivado';
+});
+if(PS.popup){var p=PS.popup;
+if(p.emoji)document.getElementById('pp-e').value=p.emoji;
+if(p.badge)document.getElementById('pp-b').value=p.badge;
+if(p.title)document.getElementById('pp-t').value=p.title;
+if(p.msg)document.getElementById('pp-m').value=p.msg;
+if(p.disc)document.getElementById('pp-d').value=p.disc;
+if(p.imgUrl){document.getElementById('pp-img').value=p.imgUrl;previewImg('pp-img','pp-imgprev');}
+}
+if(PS.banner){var b=PS.banner;
+if(b.title)document.getElementById('bn-t').value=b.title;
+if(b.msg)document.getElementById('bn-m').value=b.msg;
+if(b.disc)document.getElementById('bn-d').value=b.disc;
+}
+if(PS.plato){var pl=PS.plato;
+if(pl.emoji)document.getElementById('pl-e').value=pl.emoji;
+if(pl.name)document.getElementById('pl-n').value=pl.name;
+if(pl.price)document.getElementById('pl-p').value=pl.price;
+if(pl.special)document.getElementById('pl-s').value=pl.special;
+if(pl.desc)document.getElementById('pl-d').value=pl.desc;
+if(pl.imgUrl){document.getElementById('pl-img').value=pl.imgUrl;previewImg('pl-img','pl-imgprev');}
+}
+}
+
+function toggle(k){
+var on=PS[k]&&PS[k].active;
+waitDB(function(){
+window._update(window._ref(window._db,'promos/'+k),{active:!on});
+toast(k+(on?' desactivado':' activado ✓'));
+});
+}
+
+function savePromo(k){
+var data={};
+if(k==='popup')data={emoji:document.getElementById('pp-e').value,badge:document.getElementById('pp-b').value,title:document.getElementById('pp-t').value,msg:document.getElementById('pp-m').value,disc:parseInt(document.getElementById('pp-d').value)||0,imgUrl:document.getElementById('pp-img').value,active:PS.popup?!!PS.popup.active:false};
+else if(k==='banner')data={title:document.getElementById('bn-t').value,msg:document.getElementById('bn-m').value,disc:parseInt(document.getElementById('bn-d').value)||0,active:PS.banner?!!PS.banner.active:false};
+waitDB(function(){window._set(window._ref(window._db,'promos/'+k),data).then(function(){toast('Guardado ✓');});});
+}
+
+function saveCatDisc(){
+var cat=document.getElementById('cat-sel').value;
+var disc=parseInt(document.getElementById('cat-d').value)||0;
+if(!cat||!disc){toast('Selecciona categoría y descuento');return;}
+waitDB(function(){window._set(window._ref(window._db,'promos/cat_'+cat),{disc:disc,active:true}).then(function(){toast('Descuento '+disc+'% en '+cat+' ✓');});});
+}
+
+function removeCatDisc(){
+var cat=document.getElementById('cat-sel').value;
+if(!cat)return;
+waitDB(function(){window._set(window._ref(window._db,'promos/cat_'+cat),null).then(function(){toast('Descuento de '+cat+' eliminado');});});
+}
+
+function savePlato(){
+var data={emoji:document.getElementById('pl-e').value||'⭐',name:document.getElementById('pl-n').value,price:parseInt(document.getElementById('pl-p').value)||0,special:parseInt(document.getElementById('pl-s').value)||0,desc:document.getElementById('pl-d').value,imgUrl:document.getElementById('pl-img').value,active:PS.plato?!!PS.plato.active:false};
+if(!data.name){toast('Escribe el nombre del plato');return;}
+waitDB(function(){window._set(window._ref(window._db,'promos/plato'),data).then(function(){toast('Plato del día guardado ✓');});});
+}
+
+function previewImg(inputId,previewId){
+var url=document.getElementById(inputId).value.trim();
+var img=document.getElementById(previewId);
+if(url){img.src=url;img.style.display='block';}
+else{img.style.display='none';}
+}
+
+// ============ IMGBB UPLOAD ============
+function uploadToImgBB(file,callback){
+var formData=new FormData();
+formData.append('image',file);
+formData.append('key',IMGBB_KEY);
+var xhr=new XMLHttpRequest();
+xhr.open('POST','https://api.imgbb.com/1/upload');
+xhr.onload=function(){
+if(xhr.status===200){
+var res=JSON.parse(xhr.responseText);
+if(res.success){
+callback(null,res.data.display_url);
+}else{
+callback('Error al subir imagen');
+}
+}else{
+callback('Error de conexión');
+}
+};
+xhr.onerror=function(){callback('Error de red');};
+xhr.send(formData);
+}
+
+// ============ IMAGES PER CATEGORY ============
+function renderImgs(){
+waitDB(function(){
+window._onValue(window._ref(window._db,'cat_imgs'),function(snap){
+var imgs=snap.val()||{};
+var cats=[];
+MD.forEach(function(i){if(cats.indexOf(i.cat)===-1)cats.push(i.cat);});
+if(!cats.length){
+window._onValue(window._ref(window._db,'menu'),function(s){
+var d=s.val()||{};
+MD=Object.entries(d).map(function(e){return Object.assign({key:e[0]},e[1]);});
+MD.forEach(function(i){if(cats.indexOf(i.cat)===-1)cats.push(i.cat);});
+buildImgsList(cats,imgs);
+},{onlyOnce:true});
+}else{buildImgsList(cats,imgs);}
+},{onlyOnce:true});
+});
+}
+
+function buildImgsList(cats,imgs){
+var el=document.getElementById('imgs-list');
+el.innerHTML=cats.map(function(cat){
+var cur=imgs[cat]||{};
+var safeId=cat.replace(/[^a-zA-Z0-9]/g,'_');
+var hasUrl=cur.url&&cur.url.length>5;
+return '<div class="card">'
++'<div class="card-title">'+cat+'</div>'
+// Current image preview
++'<div class="img-wrap" id="wrap_'+safeId+'">'
++'<img class="img-current" id="cur_'+safeId+'" '+(hasUrl?'src="'+cur.url+'" style="display:block;"':'')+'>'
++(hasUrl?'<button class="img-remove" style="display:flex;" onclick="removeCatPhoto(\''+cat+'\',\''+safeId+'\')">✕</button>':'<button class="img-remove" id="rbtn_'+safeId+'">✕</button>')
++'</div>'
+// Upload area
++'<div class="upload-area">'
++'<label class="upload-btn" id="ubtn_'+safeId+'">'
++'📸 '+(hasUrl?'Cambiar foto':'Subir foto de '+cat)
++'<input type="file" accept="image/*" class="upload-input" onchange="handleUpload(this,\''+cat+'\',\''+safeId+'\')">'
++'</label>'
++'<div class="upload-progress" id="prog_'+safeId+'">'
++'<div class="upload-bar"><div class="upload-fill" id="fill_'+safeId+'"></div></div>'
++'<span class="upload-status" id="stat_'+safeId+'">Subiendo...</span>'
++'</div>'
++'</div>'
+// Emoji field
++'<div class="mb8"><label class="lbl">Emoji (respaldo si no hay foto)</label>'
++'<input class="inp" id="emo_'+safeId+'" value="'+(cur.emoji||'')+'" placeholder="🍕" style="font-size:1.2rem;">'
++'</div>'
++'<button onclick="saveEmojiOnly(\''+cat+'\',\''+safeId+'\')" class="btn btn-s" style="width:100%;">💾 Guardar emoji</button>'
++'</div>';
+}).join('');
+}
+
+function handleUpload(input,cat,safeId){
+var file=input.files[0];
+if(!file)return;
+// Show progress
+var prog=document.getElementById('prog_'+safeId);
+var fill=document.getElementById('fill_'+safeId);
+var stat=document.getElementById('stat_'+safeId);
+var ubtn=document.getElementById('ubtn_'+safeId);
+prog.classList.add('show');
+fill.style.width='30%';
+stat.textContent='Subiendo foto...';
+ubtn.classList.add('uploading');
+ubtn.innerHTML='⏳ Subiendo...';
+
+// Simulate progress
+setTimeout(function(){fill.style.width='60%';},500);
+setTimeout(function(){fill.style.width='80%';},1000);
+
+uploadToImgBB(file,function(err,url){
+if(err){
+fill.style.width='0%';
+stat.textContent='Error: '+err;
+ubtn.classList.remove('uploading');
+ubtn.innerHTML='📸 Reintentar';
+toast('Error al subir: '+err);
+return;
+}
+fill.style.width='100%';
+stat.textContent='¡Listo!';
+
+// Save to Firebase
+var emoji=document.getElementById('emo_'+safeId).value.trim();
+waitDB(function(){
+window._set(window._ref(window._db,'cat_imgs/'+cat),{url:url,emoji:emoji}).then(function(){
+toast(cat+' foto guardada ✓');
+// Update UI
+var curImg=document.getElementById('cur_'+safeId);
+curImg.src=url;
+curImg.style.display='block';
+var wrap=document.getElementById('wrap_'+safeId);
+var rbtn=wrap.querySelector('.img-remove');
+if(rbtn){rbtn.style.display='flex';rbtn.setAttribute('onclick',"removeCatPhoto('"+cat+"','"+safeId+"')");}
+ubtn.classList.remove('uploading');
+ubtn.innerHTML='📸 Cambiar foto';
+setTimeout(function(){prog.classList.remove('show');},1500);
+});
+});
+});
+// Reset input
+input.value='';
+}
+
+function removeCatPhoto(cat,safeId){
+if(!confirm('¿Quitar la foto de '+cat+'?'))return;
+waitDB(function(){
+window._update(window._ref(window._db,'cat_imgs/'+cat),{url:''}).then(function(){
+toast('Foto de '+cat+' eliminada');
+var curImg=document.getElementById('cur_'+safeId);
+curImg.style.display='none';
+curImg.src='';
+var wrap=document.getElementById('wrap_'+safeId);
+var rbtn=wrap.querySelector('.img-remove');
+if(rbtn)rbtn.style.display='none';
+var ubtn=document.getElementById('ubtn_'+safeId);
+ubtn.innerHTML='📸 Subir foto de '+cat;
+});
+});
+}
+
+function saveEmojiOnly(cat,safeId){
+var emoji=document.getElementById('emo_'+safeId).value.trim();
+waitDB(function(){
+window._update(window._ref(window._db,'cat_imgs/'+cat),{emoji:emoji}).then(function(){
+toast(cat+' emoji guardado ✓');
+});
+});
+}
+
+// ============ MENU ============
+function loadMenu(){
+waitDB(function(){
+window._onValue(window._ref(window._db,'menu'),function(snap){
+var d=snap.val()||{};
+MD=Object.entries(d).map(function(e){return Object.assign({key:e[0]},e[1]);});
+var cats=[];MD.forEach(function(i){if(cats.indexOf(i.cat)===-1)cats.push(i.cat);});
+if(!MC&&cats.length)MC=cats[0];
+renderMenuA(cats);
+},{onlyOnce:true});
+});
+}
+
+function renderMenuA(cats){
+var bar=document.getElementById('mcats');
+bar.innerHTML='';
+cats.forEach(function(c){
+var b=document.createElement('button');
+b.className='catbtn'+(c===MC?' active':'');
+b.textContent=c;
+b.onclick=function(){MC=c;loadMenu();};
+bar.appendChild(b);
+});
+var f=MD.filter(function(i){return i.cat===MC;});
+document.getElementById('mprod').innerHTML=f.map(function(item){
+var k=item.key;
+var hasSz=item.sz&&typeof item.sz==='object'&&Object.keys(item.sz).length>0;
+var szHtml='';
+if(hasSz){
+szHtml='<div style="margin-top:8px;margin-bottom:8px;padding:10px;background:var(--s2);border-radius:8px;border:1px solid var(--b);">'
++'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
++'<span class="lbl" style="margin:0;font-weight:700;color:var(--a2);">📏 Tamaños</span>'
++'<button onclick="removeSizes(\''+k+'\')" style="padding:3px 8px;background:transparent;border:1px solid var(--b);border-radius:6px;color:var(--r);font-size:.65rem;cursor:pointer;">Quitar tamaños</button>'
++'</div>';
+Object.entries(item.sz).forEach(function(e){
+szHtml+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">'
++'<span style="font-size:.75rem;color:var(--t);min-width:65px;">'+e[0]+'</span>'
++'<input class="inp" id="sz_'+k+'_'+e[0].replace(/\s/g,'_')+'" type="number" value="'+(e[1]||0)+'" style="flex:1;font-size:.8rem;padding:6px 8px;color:var(--a2);font-weight:700;">'
++'<button onclick="removeOneSize(\''+k+'\',\''+e[0]+'\')" style="padding:3px 6px;background:transparent;border:1px solid var(--b);border-radius:4px;color:var(--r);font-size:.6rem;cursor:pointer;">✕</button>'
++'</div>';
+});
+szHtml+='<div style="display:flex;gap:6px;margin-top:6px;">'
++'<input class="inp" id="nsz_name_'+k+'" placeholder="Nombre (ej: XL)" style="flex:1;font-size:.75rem;padding:6px 8px;">'
++'<input class="inp" id="nsz_price_'+k+'" type="number" placeholder="Precio" style="width:90px;font-size:.75rem;padding:6px 8px;">'
++'<button onclick="addSize(\''+k+'\')" style="padding:6px 10px;background:var(--a);border:none;border-radius:6px;color:#fff;font-size:.7rem;font-weight:700;cursor:pointer;">+</button>'
++'</div>'
++'</div>';
+}else{
+szHtml='<div style="margin-top:6px;margin-bottom:8px;">'
++'<button onclick="showAddSize(\''+k+'\')" style="padding:6px 12px;background:transparent;border:1px dashed var(--b);border-radius:8px;color:var(--m);font-size:.72rem;cursor:pointer;width:100%;">+ Agregar tamaños (ej: Personal, Medium, Large...)</button>'
++'<div id="addsz_'+k+'" style="display:none;margin-top:6px;padding:10px;background:var(--s2);border-radius:8px;border:1px solid var(--b);">'
++'<span class="lbl" style="font-weight:700;color:var(--a2);">📏 Nuevo tamaño</span>'
++'<div style="display:flex;gap:6px;margin-top:6px;">'
++'<input class="inp" id="nsz_name_'+k+'" placeholder="Nombre" style="flex:1;font-size:.75rem;padding:6px 8px;">'
++'<input class="inp" id="nsz_price_'+k+'" type="number" placeholder="Precio" style="width:90px;font-size:.75rem;padding:6px 8px;">'
++'<button onclick="addSize(\''+k+'\')" style="padding:6px 10px;background:var(--a);border:none;border-radius:6px;color:#fff;font-size:.7rem;font-weight:700;cursor:pointer;">+</button>'
++'</div>'
++'</div>'
++'</div>';
+}
+return '<div class="pcard">'
++'<div class="pcard-head"><span style="font-size:1.6rem;">'+item.e+'</span>'
++'<div style="flex:1;"><div style="font-weight:700;font-size:.88rem;">'+item.n+'</div>'
++'<div style="font-size:.7rem;color:var(--m);">'+fmt(item.p||0)+(hasSz?' · '+Object.keys(item.sz).length+' tamaños':'')+'</div></div>'
++'<button onclick="delProd(\''+k+'\')" style="padding:4px 8px;background:transparent;border:1px solid var(--b);border-radius:6px;color:var(--r);font-size:.7rem;cursor:pointer;">✕</button>'
++'</div>'
++'<div class="g2 mb8">'
++'<div><label class="lbl">Nombre</label><input class="inp" id="n_'+k+'" value="'+(item.n||'').replace(/"/g,'&quot;')+'"></div>'
++'<div><label class="lbl">Precio base</label><input class="inp" id="p_'+k+'" type="number" value="'+(item.p||0)+'" style="color:var(--a2);font-weight:700;"></div>'
++'</div>'
++'<label class="lbl">Descripción</label>'
++'<input class="inp" id="d_'+k+'" value="'+(item.d||'').replace(/"/g,'&quot;')+'" style="margin-bottom:4px;">'
++szHtml
++'<button onclick="saveProd(\''+k+'\')" style="padding:7px 14px;background:var(--g);border:none;border-radius:7px;color:#fff;font-size:.75rem;font-weight:700;cursor:pointer;width:100%;">💾 Guardar todo</button>'
++'</div>';
+}).join('');
+}
+
+function showAddSize(k){
+var el=document.getElementById('addsz_'+k);
+if(el)el.style.display='block';
+}
+
+function addSize(k){
+var nameEl=document.getElementById('nsz_name_'+k);
+var priceEl=document.getElementById('nsz_price_'+k);
+var name=nameEl.value.trim();
+var price=parseInt(priceEl.value)||0;
+if(!name||!price){toast('Escribe nombre y precio del tamaño');return;}
+waitDB(function(){
+window._update(window._ref(window._db,'menu/'+k+'/sz'),Object.fromEntries([[name,price]])).then(function(){
+toast('Tamaño '+name+' agregado ✓');
+loadMenu();
+});
+});
+}
+
+function removeOneSize(k,sizeName){
+if(!confirm('¿Quitar tamaño '+sizeName+'?'))return;
+waitDB(function(){
+window._set(window._ref(window._db,'menu/'+k+'/sz/'+sizeName),null).then(function(){
+toast(sizeName+' eliminado');
+loadMenu();
+});
+});
+}
+
+function removeSizes(k){
+if(!confirm('¿Quitar TODOS los tamaños de este producto?'))return;
+waitDB(function(){
+window._set(window._ref(window._db,'menu/'+k+'/sz'),null).then(function(){
+toast('Tamaños eliminados');
+loadMenu();
+});
+});
+}
+
+function saveProd(k){
+var n=document.getElementById('n_'+k).value.trim();
+var p=parseInt(document.getElementById('p_'+k).value)||0;
+var d=document.getElementById('d_'+k).value.trim();
+var item=MD.find(function(i){return i.key===k;});
+var updates={n:n,p:p,d:d};
+// Save size prices if they exist
+if(item&&item.sz&&typeof item.sz==='object'){
+var szUpdates={};
+Object.entries(item.sz).forEach(function(e){
+var inp=document.getElementById('sz_'+k+'_'+e[0].replace(/\s/g,'_'));
+if(inp)szUpdates[e[0]]=parseInt(inp.value)||e[1];
+});
+updates.sz=szUpdates;
+}
+waitDB(function(){window._update(window._ref(window._db,'menu/'+k),updates).then(function(){toast('✓ Guardado');loadMenu();});});
+}
+
+function delProd(k){
+if(!confirm('¿Eliminar?'))return;
+waitDB(function(){window._set(window._ref(window._db,'menu/'+k),null).then(function(){toast('Eliminado');loadMenu();});});
+}
+
+function showAddF(){document.getElementById('add-f').style.display='block';}
+
+function addProd(){
+var n=document.getElementById('nf-n').value.trim();
+var c=document.getElementById('nf-c').value.trim();
+var p=parseInt(document.getElementById('nf-p').value)||0;
+var e=document.getElementById('nf-e').value.trim()||'🍽️';
+var d=document.getElementById('nf-d').value.trim();
+if(!n||!c||!p){toast('Completa nombre, categoría y precio');return;}
+var k=Date.now().toString(36)+Math.random().toString(36).substring(2,5);
+waitDB(function(){
+window._set(window._ref(window._db,'menu/'+k),{n:n,cat:c,p:p,e:e,d:d}).then(function(){
+document.getElementById('add-f').style.display='none';
+['nf-n','nf-c','nf-p','nf-e','nf-d'].forEach(function(id){document.getElementById(id).value='';});
+MC=c;loadMenu();toast(n+' agregado ✓');
+});
+});
+}
+</script>
+</body>
+</html>

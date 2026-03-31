@@ -1,0 +1,17 @@
+{
+  "name": "Arturo's Fast Food",
+  "short_name": "Arturo's",
+  "description": "Pedidos online de Arturo's Fast Food",
+  "start_url": "/arturos-fast-food/index.html",
+  "scope": "/arturos-fast-food/",
+  "display": "standalone",
+  "background_color": "#0f0e0c",
+  "theme_color": "#e8521a",
+  "orientation": "portrait-primary",
+  "lang": "es",
+  "categories": ["food", "shopping"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

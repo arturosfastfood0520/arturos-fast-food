@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arturo's — Domiciliario</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f0e0c;--a:#e8521a;--g:#4caf72;--t:#f0ede8;--m:#7a7670;--s:#1a1916;--b:#2e2c29;--r:#e85555;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+.box{background:var(--s);border:1px solid var(--b);border-radius:20px;padding:32px 24px;max-width:340px;width:100%;text-align:center;}
+.logo{font-size:2.5rem;margin-bottom:8px;}
+h1{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;margin-bottom:6px;color:var(--t);}
+.ped{background:rgba(232,82,26,0.1);border:1px solid rgba(232,82,26,0.3);border-radius:10px;padding:14px;margin:16px 0;text-align:left;}
+.ped .lbl{font-size:.68rem;color:var(--m);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+.ped .val{font-size:.9rem;font-weight:600;}
+.ped .val2{font-size:.78rem;color:var(--m);margin-top:2px;}
+.status{display:flex;align-items:center;gap:8px;justify-content:center;margin:16px 0;font-size:.85rem;font-weight:600;}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--m);flex-shrink:0;}
+.dot.active{background:var(--g);animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+.btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:.95rem;font-weight:700;cursor:pointer;margin-top:8px;transition:all .2s;font-family:'DM Sans',sans-serif;}
+.btn-start{background:var(--g);color:#fff;}
+.btn-delivered{background:var(--a);color:#fff;display:none;}
+.info{font-size:.75rem;color:var(--m);margin-top:12px;line-height:1.5;}
+.done-msg{display:none;margin-top:16px;padding:16px;background:rgba(76,175,114,.1);border:1px solid rgba(76,175,114,.3);border-radius:12px;}
+.done-msg p{font-size:.88rem;font-weight:600;color:var(--g);}
+
+/* Custom confirm modal */
+.confirm-ov{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.78);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;}
+.confirm-ov.show{display:flex;}
+.confirm-box{background:var(--s);border:1px solid var(--b);border-radius:16px;padding:24px 20px;text-align:center;max-width:300px;width:92%;animation:popIn .3s ease;}
+@keyframes popIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.confirm-box .ci{font-size:2.5rem;margin-bottom:10px;}
+.confirm-box p{font-size:.9rem;line-height:1.5;margin-bottom:16px;color:var(--t);}
+.confirm-box p small{display:block;font-size:.76rem;color:var(--m);margin-top:4px;}
+.confirm-btns{display:flex;gap:8px;}
+.confirm-btns button{flex:1;padding:12px;border-radius:10px;border:none;font-size:.85rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.cbtn-yes{background:var(--g);color:#fff;}
+.cbtn-no{background:transparent;border:1px solid var(--b) !important;color:var(--m);}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="logo">🏍️</div>
+  <h1>Panel Domiciliario</h1>
+  <p style="color:var(--m);font-size:.8rem;">Arturo's Fast Food</p>
+
+  <div class="ped" id="ped-info">
+    <div class="lbl">Cargando pedido...</div>
+  </div>
+
+  <div class="status">
+    <span class="dot" id="status-dot"></span>
+    <span id="status-text">Listo para iniciar</span>
+  </div>
+
+  <button class="btn btn-start" id="btn-start" onclick="startTracking()">
+    🛵 Iniciar entrega
+  </button>
+  <button class="btn btn-delivered" id="btn-delivered" onclick="askDelivered()">
+    ✅ Detener y marcar entregado
+  </button>
+
+  <div class="done-msg" id="done-msg">
+    <p>✅ ¡Pedido entregado!</p>
+    <p style="font-size:.78rem;color:var(--m);margin-top:4px;">Gracias por tu trabajo. Puedes cerrar esta página.</p>
+  </div>
+
+  <p class="info" id="info-text">Al iniciar, el pedido se marca como "en camino" en el sistema.</p>
+</div>
+
+<!-- Custom confirm modal -->
+<div class="confirm-ov" id="confirm-ov">
+  <div class="confirm-box">
+    <div class="ci">📦</div>
+    <p>¿Confirmar que el pedido fue entregado?<small>Esta acción no se puede deshacer</small></p>
+    <div class="confirm-btns">
+      <button class="cbtn-no" onclick="closeConfirm()">Cancelar</button>
+      <button class="cbtn-yes" onclick="doDelivered()">Sí, entregado</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getDatabase, ref, update, onValue, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+const app = initializeApp({databaseURL:'https://arturos-fast-food-default-rtdb.firebaseio.com'});
+const db = getDatabase(app);
+
+const params = new URLSearchParams(window.location.search);
+const orderKey = params.get('key');
+const domName = params.get('dom') || 'Domiciliario';
+
+if(!orderKey){
+  document.getElementById('ped-info').innerHTML = '<div class="lbl" style="color:var(--r)">Link inválido. Pide un nuevo link al restaurante.</div>';
+  document.getElementById('btn-start').style.display='none';
+  document.getElementById('info-text').style.display='none';
+}
+
+if(orderKey){
+  const orderRef = ref(db, 'pedidos/'+orderKey);
+  onValue(orderRef, function(snap){
+    var o = snap.val();
+    if(!o){ document.getElementById('ped-info').innerHTML='<div class="lbl" style="color:var(--r)">Pedido no encontrado</div>'; return; }
+    var cl = o.cl||o.client||'Cliente';
+    var addr = o.addr||o.address||'';
+    var barrio = o.barrio||'';
+    var items = o.items||[];
+    var prods = items.map(function(i){ return (i.qty||1)+'x '+(i.nombre||i.name||'Producto'); }).join(', ');
+    document.getElementById('ped-info').innerHTML =
+      '<div class="lbl">Pedido '+o.id+'</div>'
+      +'<div class="val">👤 '+cl+'</div>'
+      +'<div class="val2">📍 '+addr+(barrio?' · '+barrio:'')+'</div>'
+      +(prods?'<div class="val2" style="margin-top:4px">🛒 '+prods+'</div>':'');
+
+    // If already delivered or en_camino, update UI
+    if(o.st==='enviado'){
+      document.getElementById('btn-start').style.display='none';
+      document.getElementById('btn-delivered').style.display='none';
+      document.getElementById('done-msg').style.display='block';
+      document.getElementById('status-dot').className='dot';
+      document.getElementById('status-text').textContent='Pedido entregado';
+      document.getElementById('info-text').style.display='none';
+    } else if(o.st==='en_camino'){
+      document.getElementById('btn-start').style.display='none';
+      document.getElementById('btn-delivered').style.display='block';
+      document.getElementById('status-dot').className='dot active';
+      document.getElementById('status-text').textContent='En camino...';
+      document.getElementById('info-text').textContent='Cuando llegues, toca "Detener y marcar entregado".';
+    }
+  }, {onlyOnce:true});
+}
+
+window.startTracking = function(){
+  document.getElementById('btn-start').style.display='none';
+  document.getElementById('btn-delivered').style.display='block';
+  document.getElementById('status-dot').className='dot active';
+  document.getElementById('status-text').textContent='En camino...';
+  document.getElementById('info-text').textContent='Cuando llegues, toca "Detener y marcar entregado".';
+
+  if(orderKey){
+    update(ref(db,'pedidos/'+orderKey), {st:'en_camino', dom:domName});
+  }
+};
+
+window.askDelivered = function(){
+  document.getElementById('confirm-ov').classList.add('show');
+};
+
+window.closeConfirm = function(){
+  document.getElementById('confirm-ov').classList.remove('show');
+};
+
+window.doDelivered = function(){
+  document.getElementById('confirm-ov').classList.remove('show');
+  document.getElementById('status-dot').className='dot';
+  document.getElementById('status-text').textContent='Pedido entregado';
+  document.getElementById('btn-delivered').style.display='none';
+  document.getElementById('done-msg').style.display='block';
+  document.getElementById('info-text').style.display='none';
+
+  if(orderKey){
+    update(ref(db,'pedidos/'+orderKey), {st:'enviado'});
+    // Update domiciliario stats
+    var statsRef = ref(db, 'config/domStats/'+domName);
+    get(statsRef).then(function(snap){
+      var stats = snap.val() || {pd:0, ing:0};
+      update(statsRef, {pd: (stats.pd||0)+1});
+    }).catch(function(){});
+  }
+};
+
+// Force unregister old service workers
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(function(regs){
+    regs.forEach(function(r){ r.unregister(); });
+  });
+}
+</script>
+</body>
+</html>
