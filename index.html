@@ -265,7 +265,7 @@ if('serviceWorker' in navigator){
   </div>
 </div>
 
-<div class="pop-ov" id="pop-ov">
+<div class="pop-ov" id="pop-ov" onclick="if(event.target===this)closePop()">
   <div class="pop-box">
     <div class="pop-img" id="pop-img"></div>
     <div class="pop-body">
@@ -414,9 +414,9 @@ function renderProds(){
 function renderBanner(){var b=PROMOS.banner;var el=document.getElementById('promo-area');if(b&&b.active){el.innerHTML="<div class='pb' onclick='showPop()'><div class='pb-lbl'>Promoción</div><div class='pb-title'>"+b.title+"</div><div class='pb-msg'>"+b.msg+"</div>"+(b.disc?"<div class='pb-disc'>"+b.disc+"<small>% OFF</small></div>":"")+"</div>";}else{el.innerHTML="";}}
 function renderPlato(){var pl=PROMOS.plato;var el=document.getElementById('plato-area');if(pl&&pl.active){var save=pl.price&&pl.special?Math.round((pl.price-pl.special)/pl.price*100):0;el.innerHTML="<div class='plato' onclick='openPlatoPop()'><div class='plato-badge'>⭐ Plato del día</div><div style='font-size:2.2rem;margin-bottom:6px;'>"+pl.emoji+"</div><div class='plato-name'>"+pl.name+"</div>"+(pl.desc?"<div class='plato-desc'>"+pl.desc+"</div>":"")+"<div class='plato-prices'>"+(pl.price?"<span class='plato-old'>"+fmt(pl.price)+"</span>":"")+"<span class='plato-new'>"+fmt(pl.special)+"</span>"+(save>0?"<span class='plato-save'>-"+save+"%</span>":"")+"</div></div>";}else{el.innerHTML="";}}
 function checkPop(){if(PROMOS.popup&&PROMOS.popup.active)setTimeout(showPop,1800);}
-function showPop(){var p=PROMOS.popup||PROMOS.banner;if(!p||!p.active)return;document.getElementById('pop-badge').textContent=p.badge||'Promoción';document.getElementById('pop-title').textContent=p.title||'';document.getElementById('pop-msg').textContent=p.msg||'';document.getElementById('pop-disc').innerHTML=p.disc?p.disc+"<small>% OFF</small>":'';document.getElementById('pop-img').innerHTML=p.imgUrl?"<img src='"+p.imgUrl+"' style='width:100%;height:100%;object-fit:cover;'>":"<div style='font-size:6rem;'>"+(p.emoji||'🎉')+"</div>";document.getElementById('pop-ov').classList.add('show');}
-function openPlatoPop(){var pl=PROMOS.plato;if(!pl)return;document.getElementById('pop-badge').textContent='⭐ Plato del día';document.getElementById('pop-title').textContent=pl.name||'';document.getElementById('pop-msg').textContent=pl.desc||'';document.getElementById('pop-disc').innerHTML=pl.special?"<span style='font-size:1.7rem;color:var(--g)'>"+fmt(pl.special)+"</span>":'';document.getElementById('pop-img').innerHTML="<div style='font-size:7rem;'>"+pl.emoji+"</div>";document.getElementById('pop-ov').classList.add('show');}
-function closePop(){document.getElementById('pop-ov').classList.remove('show');}
+function showPop(){var p=PROMOS.popup||PROMOS.banner;if(!p||!p.active)return;document.getElementById('pop-badge').textContent=p.badge||'Promoción';document.getElementById('pop-title').textContent=p.title||'';document.getElementById('pop-msg').textContent=p.msg||'';document.getElementById('pop-disc').innerHTML=p.disc?p.disc+"<small>% OFF</small>":'';document.getElementById('pop-img').innerHTML=p.imgUrl?"<img src='"+p.imgUrl+"' style='width:100%;height:100%;object-fit:cover;'>":"<div style='font-size:6rem;'>"+(p.emoji||'🎉')+"</div>";document.getElementById('pop-ov').classList.add('show');document.body.style.overflow='hidden';}
+function openPlatoPop(){var pl=PROMOS.plato;if(!pl)return;document.getElementById('pop-badge').textContent='⭐ Plato del día';document.getElementById('pop-title').textContent=pl.name||'';document.getElementById('pop-msg').textContent=pl.desc||'';document.getElementById('pop-disc').innerHTML=pl.special?"<span style='font-size:1.7rem;color:var(--g)'>"+fmt(pl.special)+"</span>":'';document.getElementById('pop-img').innerHTML="<div style='font-size:7rem;'>"+pl.emoji+"</div>";document.getElementById('pop-ov').classList.add('show');document.body.style.overflow='hidden';}
+function closePop(){document.getElementById('pop-ov').classList.remove('show');document.body.style.overflow='';document.body.style.overflowY='auto';}
 
 // CART LOGIC
 function setSz(key,s){selectedSizes[key]=s;if(cart[key])cart[key].ss=s;renderProds();}
