@@ -305,9 +305,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-he
       </div>
       <div class="scard">
         <h3>🕐 Restaurante</h3>
-        <div style="display:flex;align-items:center;gap:10px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
           <span id="resto-st" style="font-size:.88rem;font-weight:600;color:var(--g);">● Abierto</span>
           <button class="btn btn-s" id="resto-btn" onclick="toggleResto()">Cerrar restaurante</button>
+        </div>
+        <div style="border-top:1px solid var(--b);padding-top:12px;">
+          <h4 style="font-size:.82rem;margin-bottom:8px;color:var(--m);">⏰ Horario automático</h4>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <label style="font-size:.8rem;color:var(--t);">Abre:</label>
+            <input class="inp" type="time" id="hour-open" style="width:130px;">
+            <label style="font-size:.8rem;color:var(--t);">Cierra:</label>
+            <input class="inp" type="time" id="hour-close" style="width:130px;">
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button class="btn btn-a" onclick="saveHours()">Guardar horario</button>
+            <button class="btn btn-s" onclick="clearHours()">Quitar horario</button>
+          </div>
+          <p id="hours-status" style="font-size:.75rem;color:var(--m);margin-top:6px;"></p>
         </div>
       </div>
       <div class="scard">
@@ -436,6 +450,20 @@ function init(){
         document.getElementById('resto-st').textContent='● Abierto';
         document.getElementById('resto-st').style.color='var(--g)';
         document.getElementById('resto-btn').textContent='Cerrar restaurante';
+      }
+    });
+
+    // Listen hours config
+    onValue(ref(db,'config/hours'),function(snap){
+      var h=snap.val();
+      if(h&&h.open&&h.close){
+        document.getElementById('hour-open').value=h.open;
+        document.getElementById('hour-close').value=h.close;
+        document.getElementById('hours-status').textContent='Horario activo: '+h.open+' - '+h.close;
+      } else {
+        document.getElementById('hour-open').value='';
+        document.getElementById('hour-close').value='';
+        document.getElementById('hours-status').textContent='Sin horario automático (solo manual)';
       }
     });
 
@@ -1060,6 +1088,23 @@ function toggleResto(){
   restoOpen=!restoOpen;
   waitDB(function(){window._set(window._ref(window._db,'config/open'),restoOpen);});
   toast(restoOpen?'Restaurante abierto':'Restaurante cerrado');
+}
+
+function saveHours(){
+  var ho=document.getElementById('hour-open').value;
+  var hc=document.getElementById('hour-close').value;
+  if(!ho||!hc){toast('Selecciona hora de apertura y cierre');return;}
+  waitDB(function(){window._set(window._ref(window._db,'config/hours'),{open:ho,close:hc});});
+  toast('Horario guardado: '+ho+' - '+hc+' ✓');
+  document.getElementById('hours-status').textContent='Horario activo: '+ho+' - '+hc;
+}
+
+function clearHours(){
+  waitDB(function(){window._set(window._ref(window._db,'config/hours'),null);});
+  document.getElementById('hour-open').value='';
+  document.getElementById('hour-close').value='';
+  document.getElementById('hours-status').textContent='Sin horario automático (solo manual)';
+  toast('Horario eliminado — solo modo manual');
 }
 
 function changePass(){

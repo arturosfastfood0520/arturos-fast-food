@@ -15,6 +15,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-he
 
 /* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(15,14,12,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--b);}
+.closed-banner{background:linear-gradient(135deg,var(--r),#c0392b);color:#fff;text-align:center;padding:12px 16px;font-size:.85rem;font-weight:600;line-height:1.4;}
+.closed-banner small{display:block;font-weight:400;font-size:.75rem;opacity:.85;margin-top:2px;}
 .nav-top{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;}
 .logo{font-family:'Syne',sans-serif;font-weight:900;font-size:.92rem;color:var(--a);line-height:1.1;}
 .logo small{color:var(--m);font-size:.55rem;display:block;font-family:'DM Sans',sans-serif;font-weight:400;}
@@ -225,6 +227,7 @@ if('serviceWorker' in navigator){
   </nav>
 
   <div class="view active" id="view-menu">
+    <div class="closed-banner" id="closed-banner" style="display:none;">🔴 Estamos cerrados en este momento<small id="closed-hours-msg"></small></div>
     <div class="cat-nav" id="cat-nav">
       <button class="back-btn" id="back-btn" onclick="openCats()">← Atrás · Ver categorías</button>
       <div class="cats-grid" id="cats-grid"></div>
@@ -289,6 +292,8 @@ var COMBO_CATS=['Perros Calientes','Hamburguesas','Sandwich'];
 var COMBO_PRICE=5000;
 var COMBO_DESC='Papas + Gaseosa personal';
 var selectedSizes={}; // Track size selection per product key before adding to cart
+var restoOpen=true;
+var restoHours=null; // {open:'HH:MM', close:'HH:MM'}
 
 function fmt(n){return '$'+(n||0).toLocaleString('es-CO');}
 function waitDB(cb){if(window._fbReady)cb();else setTimeout(function(){waitDB(cb);},100);}
@@ -319,9 +324,13 @@ function showCart(){
 // CATEGORY NAV
 function openCats(){
   catsExpanded=true;
+  activeCat='';
   document.getElementById('cats-grid').style.display='grid';
   document.getElementById('back-btn').classList.remove('show');
-  
+  document.getElementById('cat-hero').innerHTML='';
+  document.getElementById('prod-list').innerHTML='';
+  document.querySelectorAll('.cat-btn').forEach(function(b){b.classList.remove('on');});
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 function switchCat(cat){
   activeCat=cat;
@@ -339,14 +348,44 @@ function loadData(){waitDB(function(){
   window._onValue(window._ref(window._db,'promos'),function(snap){PROMOS=snap.val()||{};renderBanner();renderPlato();checkPop();});
   window._onValue(window._ref(window._db,'cat_imgs'),function(snap){CAT_IMGS=snap.val()||{};renderAll();});
   window._onValue(window._ref(window._db,'config/combo'),function(snap){var c=snap.val();if(c){if(c.price)COMBO_PRICE=c.price;if(c.desc)COMBO_DESC=c.desc;}},{onlyOnce:true});
+  window._onValue(window._ref(window._db,'config/open'),function(snap){restoOpen=snap.val()!==false;checkRestoStatus();});
+  window._onValue(window._ref(window._db,'config/hours'),function(snap){restoHours=snap.val()||null;checkRestoStatus();});
 });}
+
+function checkRestoStatus(){
+  var open=restoOpen;
+  var msg='';
+  // Si hay horario configurado, verificar automáticamente
+  if(restoHours&&restoHours.open&&restoHours.close){
+    var now=new Date();
+    var hm=('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2);
+    if(restoHours.open<=restoHours.close){
+      open=open&&(hm>=restoHours.open&&hm<restoHours.close);
+    } else {
+      // Horario nocturno (ej: 18:00 a 02:00)
+      open=open&&(hm>=restoHours.open||hm<restoHours.close);
+    }
+    msg='Horario: '+restoHours.open+' - '+restoHours.close;
+  }
+  var banner=document.getElementById('closed-banner');
+  var hmsg=document.getElementById('closed-hours-msg');
+  if(!open){
+    banner.style.display='block';
+    hmsg.textContent=msg;
+  } else {
+    banner.style.display='none';
+  }
+  // Bloquear/desbloquear botón de pedido
+  var cartBtn=document.querySelector('.cart-btn');
+  if(cartBtn){cartBtn.dataset.restoOpen=open?'1':'0';}
+}
 
 function getCats(){var c=[];MENU.forEach(function(i){if(c.indexOf(i.cat)===-1)c.push(i.cat);});return c;}
 function getEmoji(cat){var item=MENU.find(function(i){return i.cat===cat;});return item?item.e:'🍽️';}
 function getPromo(key,cat){if(PROMOS['item_'+key]&&PROMOS['item_'+key].active)return PROMOS['item_'+key];if(PROMOS['cat_'+cat]&&PROMOS['cat_'+cat].active)return PROMOS['cat_'+cat];return null;}
 
 function renderAll(){
-  var cats=getCats();if(!activeCat&&cats.length)activeCat=cats[0];
+  var cats=getCats();
   var grid=document.getElementById('cats-grid');
   grid.innerHTML=cats.map(function(c){
     var ci=CAT_IMGS[c];var hasImg=ci&&ci.url;var emoji=getEmoji(c);
@@ -354,7 +393,8 @@ function renderAll(){
     return "<button class='cat-btn"+(c===activeCat?' on':'')+"' data-cat='"+c+"'>"+imgPart+"<span class='cat-name'>"+c+"</span></button>";
   }).join('');
   grid.onclick=function(e){var btn=e.target.closest('[data-cat]');if(btn)switchCat(btn.getAttribute('data-cat'));};
-  renderHero();renderProds();
+  if(activeCat){renderHero();renderProds();}
+  else{document.getElementById('cat-hero').innerHTML='';document.getElementById('prod-list').innerHTML='';}
 }
 
 function renderHero(){
@@ -487,6 +527,13 @@ function renderCart(){
 
 // PLACE ORDER — tracking link goes in WhatsApp message
 function placeOrder(){
+  // Verificar si el restaurante está abierto
+  checkRestoStatus();
+  var cartBtn=document.querySelector('.cart-btn');
+  if(cartBtn&&cartBtn.dataset.restoOpen==='0'){
+    showToast('🔴 El restaurante está cerrado en este momento','er');
+    return;
+  }
   saveForm();
   var tipoStr={domicilio:'🛵 DOMICILIO',recoger:'🏪 RECOGER EN LOCAL',adelantado:'⏰ ADELANTADO'};
   var name=formData.fn.trim(),ph=formData.fp.trim(),addr=formData.fa.trim(),barrio=formData.barrio.trim();
@@ -531,6 +578,8 @@ function placeOrder(){
   cart={};updateBadge();
 }
 function closeModal(){document.getElementById('modal').classList.remove('show');}
+// Revisar estado del restaurante cada 60 segundos
+setInterval(function(){if(restoHours)checkRestoStatus();},60000);
 </script>
 </body>
 </html>
