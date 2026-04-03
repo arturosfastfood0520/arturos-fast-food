@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#e8521a">
 <title>Arturo's Fast Food — Pide aquí</title>
 <link rel="manifest" href="manifest.json">
@@ -10,8 +10,8 @@
 <style>
 :root{--bg:#0f0e0c;--s:#1a1916;--s2:#242220;--b:#2e2c29;--a:#e8521a;--a2:#f5a623;--t:#f0ede8;--m:#7a7670;--g:#4caf72;--r:#e85555;--wa:#25D366;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;overflow-x:hidden;}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;-webkit-overflow-scrolling:touch;overflow-y:auto;}
+html{height:auto;overflow:auto;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;overflow-x:hidden;overflow-y:scroll;-webkit-overflow-scrolling:touch;}
 
 /* NAV */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(15,14,12,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--b);}
@@ -23,8 +23,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(15,14,12,.97
 .cart-btn .badge{position:absolute;top:-6px;right:-6px;background:var(--a);color:#fff;border-radius:99px;font-size:.6rem;font-weight:800;padding:2px 6px;min-width:18px;text-align:center;display:none;}
 
 /* CATEGORY NAV */
-.cat-nav{position:fixed;top:52px;left:0;right:0;z-index:99;background:var(--bg);max-height:calc(100vh - 52px);overflow-y:auto;-webkit-overflow-scrolling:touch;}
-.back-btn{display:none;padding:12px 16px;background:var(--s);border:none;border-bottom:1px solid var(--b);color:var(--a);font-size:.88rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%;text-align:left;}
+.cat-nav{background:var(--bg);}
+.back-btn{display:none;padding:12px 16px;background:var(--s);border:none;border-bottom:1px solid var(--b);color:var(--a);font-size:.88rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%;text-align:left;position:sticky;top:52px;z-index:99;}
 .back-btn.show{display:block;}
 .cats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 16px;border-bottom:1px solid var(--b);background:var(--bg);}
 .cat-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:14px 8px;background:var(--s);border:1px solid var(--b);border-radius:14px;cursor:pointer;transition:all .2s ease;overflow:hidden;}
@@ -91,7 +91,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(15,14,12,.97
 /* VIEWS */
 .view{display:none;}
 .view.active{display:block;}
-#view-menu{padding-top:0;}
+#view-menu{padding-top:52px;}
 #view-cart{padding-top:52px;}
 
 /* CART VIEW */
@@ -296,22 +296,16 @@ function showToast(msg,type){var t=document.getElementById('toast');t.textConten
 function updateBadge(){var c=0;Object.values(cart).forEach(function(i){c+=i.qty;});var b=document.getElementById('cb');b.textContent=c;b.style.display=c>0?'inline-block':'none';}
 
 // Dynamic padding based on cat-nav height
-function updateMenuPadding(){
-  var catNav=document.getElementById('cat-nav');
-  var mc=document.getElementById('menu-content');
-  if(catNav&&mc){mc.style.paddingTop=(52+catNav.offsetHeight)+'px';}
-}
-
 document.getElementById('open-btn').onclick=function(){
   var sp=document.getElementById('splash');sp.classList.add('hide');
-  setTimeout(function(){sp.style.display='none';document.getElementById('main').style.display='block';loadData();setTimeout(updateMenuPadding,150);},500);
+  setTimeout(function(){sp.style.display='none';document.getElementById('main').style.display='block';loadData();},500);
 };
 
 function showMenu(){
   document.getElementById('view-menu').classList.add('active');
   document.getElementById('view-cart').classList.remove('active');
   document.getElementById('cat-nav').style.display='block';
-  setTimeout(updateMenuPadding,50);
+  
   window.scrollTo({top:0});
 }
 function showCart(){
@@ -327,7 +321,7 @@ function openCats(){
   catsExpanded=true;
   document.getElementById('cats-grid').style.display='grid';
   document.getElementById('back-btn').classList.remove('show');
-  setTimeout(updateMenuPadding,50);
+  
 }
 function switchCat(cat){
   activeCat=cat;
@@ -336,7 +330,7 @@ function switchCat(cat){
   document.getElementById('cats-grid').style.display='none';
   document.getElementById('back-btn').classList.add('show');
   renderHero();renderProds();
-  setTimeout(updateMenuPadding,50);
+  
   window.scrollTo({top:0,behavior:'smooth'});
 }
 // DATA
@@ -360,7 +354,7 @@ function renderAll(){
     return "<button class='cat-btn"+(c===activeCat?' on':'')+"' data-cat='"+c+"'>"+imgPart+"<span class='cat-name'>"+c+"</span></button>";
   }).join('');
   grid.onclick=function(e){var btn=e.target.closest('[data-cat]');if(btn)switchCat(btn.getAttribute('data-cat'));};
-  renderHero();renderProds();setTimeout(updateMenuPadding,50);
+  renderHero();renderProds();
 }
 
 function renderHero(){
@@ -416,7 +410,7 @@ function renderPlato(){var pl=PROMOS.plato;var el=document.getElementById('plato
 function checkPop(){if(PROMOS.popup&&PROMOS.popup.active)setTimeout(showPop,1800);}
 function showPop(){var p=PROMOS.popup||PROMOS.banner;if(!p||!p.active)return;document.getElementById('pop-badge').textContent=p.badge||'Promoción';document.getElementById('pop-title').textContent=p.title||'';document.getElementById('pop-msg').textContent=p.msg||'';document.getElementById('pop-disc').innerHTML=p.disc?p.disc+"<small>% OFF</small>":'';document.getElementById('pop-img').innerHTML=p.imgUrl?"<img src='"+p.imgUrl+"' style='width:100%;height:100%;object-fit:cover;'>":"<div style='font-size:6rem;'>"+(p.emoji||'🎉')+"</div>";document.getElementById('pop-ov').classList.add('show');document.body.style.overflow='hidden';}
 function openPlatoPop(){var pl=PROMOS.plato;if(!pl)return;document.getElementById('pop-badge').textContent='⭐ Plato del día';document.getElementById('pop-title').textContent=pl.name||'';document.getElementById('pop-msg').textContent=pl.desc||'';document.getElementById('pop-disc').innerHTML=pl.special?"<span style='font-size:1.7rem;color:var(--g)'>"+fmt(pl.special)+"</span>":'';document.getElementById('pop-img').innerHTML="<div style='font-size:7rem;'>"+pl.emoji+"</div>";document.getElementById('pop-ov').classList.add('show');document.body.style.overflow='hidden';}
-function closePop(){document.getElementById('pop-ov').classList.remove('show');document.body.style.overflow='';document.body.style.overflowY='auto';}
+function closePop(){document.getElementById('pop-ov').classList.remove('show');document.body.style.overflow='';document.body.style.overflowX='hidden';document.body.style.overflowY='scroll';}
 
 // CART LOGIC
 function setSz(key,s){selectedSizes[key]=s;if(cart[key])cart[key].ss=s;renderProds();}
