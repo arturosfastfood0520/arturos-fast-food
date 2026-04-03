@@ -41,6 +41,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-he
 .wa-help{display:flex;align-items:center;justify-content:center;gap:7px;padding:12px;background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.25);border-radius:10px;font-size:.82rem;font-weight:600;color:#25D366;text-decoration:none;margin-bottom:18px;}
 .not-found{text-align:center;padding:60px 20px;color:var(--m);}
 .not-found .big{font-size:3rem;margin-bottom:10px;}
+
+/* Notification banner */
+.notif-banner{display:none;background:linear-gradient(135deg,var(--a),#d4451a);color:#fff;text-align:center;padding:16px 18px;font-size:.9rem;font-weight:700;animation:slideDown .4s ease,notifPulse 2s ease infinite 1s;}
+.notif-banner.show{display:block;}
+.notif-banner small{display:block;font-weight:400;font-size:.75rem;opacity:.85;margin-top:3px;}
+@keyframes slideDown{from{transform:translateY(-100%);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes notifPulse{0%,100%{opacity:1}50%{opacity:.85}}
 </style>
 </head>
 <body>
@@ -50,6 +57,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-he
     <p>Seguimiento de tu pedido en tiempo real</p>
   </div>
 </div>
+<div class="notif-banner" id="notif-banner">🛵 ¡Tu pedido va en camino!<small id="notif-dom"></small></div>
 <div class="content" id="content">
   <div class="not-found"><div class="big">⏳</div><p>Cargando tu pedido...</p></div>
 </div>
@@ -69,7 +77,37 @@ if(!orderKey){
 } else {
 
   var stOrder = ['nuevo','preparando','listo','en_camino','enviado'];
+  var prevStatus = null;
   function fmt(n){ return '$'+(n||0).toLocaleString('es-CO'); }
+
+  // Notification sound using Web Audio API (no external files needed)
+  function playNotifSound(){
+    try{
+      var ctx = new (window.AudioContext||window.webkitAudioContext)();
+      // Play a pleasant two-tone chime
+      [0, 0.15].forEach(function(delay, i){
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.value = i===0 ? 587 : 784; // D5, G5
+        gain.gain.setValueAtTime(0.4, ctx.currentTime+delay);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime+delay+0.5);
+        osc.start(ctx.currentTime+delay);
+        osc.stop(ctx.currentTime+delay+0.5);
+      });
+      // Third tone for emphasis
+      setTimeout(function(){
+        var osc2=ctx.createOscillator();var g2=ctx.createGain();
+        osc2.connect(g2);g2.connect(ctx.destination);
+        osc2.type='sine';osc2.frequency.value=988;
+        g2.gain.setValueAtTime(0.3,ctx.currentTime);
+        g2.gain.exponentialRampToValueAtTime(0.01,ctx.currentTime+0.6);
+        osc2.start(ctx.currentTime);osc2.stop(ctx.currentTime+0.6);
+      },300);
+    }catch(e){console.log('Audio not supported');}
+  }
 
   onValue(ref(db,'pedidos/'+orderKey), function(snap){
     var o = snap.val();
@@ -81,6 +119,19 @@ if(!orderKey){
     var addr = o.addr||o.address||'';
     var barrio = o.barrio||'';
     var dom = o.dom||null;
+
+    // Detect status change to en_camino → play sound + show banner
+    if(prevStatus!==null && prevStatus!=='en_camino' && st==='en_camino'){
+      playNotifSound();
+      var nb=document.getElementById('notif-banner');
+      nb.classList.add('show');
+      document.getElementById('notif-dom').textContent=dom?dom+' va en camino':'El domiciliario va en camino';
+      // Also try vibrate on mobile
+      if(navigator.vibrate) navigator.vibrate([200,100,200,100,300]);
+    }
+    // Hide banner if status moves past en_camino
+    if(st==='enviado'){document.getElementById('notif-banner').classList.remove('show');}
+    prevStatus=st;
     var items = o.items||[];
     var sub = items.reduce(function(s,i){ return s+((i.precio||i.price||0)*(i.qty||1)); },0);
 

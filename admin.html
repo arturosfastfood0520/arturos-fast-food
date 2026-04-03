@@ -658,25 +658,10 @@ function doAssign(key,domId){
   if(!dom)return;
   var o=orders[key];
   if(!o)return;
-  var cl=o.cl||o.client||'Cliente';
-  var ph=o.ph||'';
-  var addr=o.addr||o.address||'';
-  var barrio=o.barrio||'';
-  var sub=(o.items||[]).reduce(function(s,i){return s+((i.precio||0)*(i.qty||1));},0);
-  var domLink='https://arturosfastfood0520.github.io/arturos-fast-food/domiciliario.html?key='+key+'&dom='+encodeURIComponent(dom.name);
-  var msg='🏍️ PEDIDO ASIGNADO '+(o.id||key)+'\nHola '+dom.name+'! Nuevo domicilio:\n\n'
-    +'👤 Cliente: '+cl+'\n📞 Tel: '+ph+'\n📍 Dirección: '+addr+'\n🏘️ Barrio: '+barrio
-    +'\n💰 Subtotal: '+fmt(sub)+' + domicilio\n💳 Pago: '+(o.pay||'')
-    +'\n\n👆 ABRE ESTE LINK PARA COMPARTIR TU UBICACIÓN:\n'+domLink+'\n\nConfirma recibido! ✅';
   waitDB(function(){
-    window._update(window._ref(window._db,'pedidos/'+key),{st:'en_camino',dom:dom.name});
-    // Persist stats in Firebase
-    dom.pd=(dom.pd||0)+1;
-    dom.ing=(dom.ing||0)+8000;
-    window._update(window._ref(window._db,'config/domStats/'+dom.id),{pd:dom.pd,ing:dom.ing});
+    window._update(window._ref(window._db,'pedidos/'+key),{st:'listo',dom:dom.name});
   });
-  window.open(waUrl(dom.ph,msg),'_blank');
-  toast((o.id||key)+' asignado a '+dom.name+' ✓');
+  toast((o.id||key)+' asignado a '+dom.name+' ✓ — Aparecerá en su panel');
   renderDom();
 }
 

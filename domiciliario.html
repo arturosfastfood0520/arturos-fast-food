@@ -2,32 +2,43 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Arturo's — Domiciliario</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Arturo's — Panel Domiciliario</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0f0e0c;--a:#e8521a;--g:#4caf72;--t:#f0ede8;--m:#7a7670;--s:#1a1916;--b:#2e2c29;--r:#e85555;}
+:root{--bg:#0f0e0c;--a:#e8521a;--a2:#f5a623;--g:#4caf72;--t:#f0ede8;--m:#7a7670;--s:#1a1916;--s2:#242220;--b:#2e2c29;--r:#e85555;--blue:#3b82f6;}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
-.box{background:var(--s);border:1px solid var(--b);border-radius:20px;padding:32px 24px;max-width:340px;width:100%;text-align:center;}
-.logo{font-size:2.5rem;margin-bottom:8px;}
-h1{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;margin-bottom:6px;color:var(--t);}
-.ped{background:rgba(232,82,26,0.1);border:1px solid rgba(232,82,26,0.3);border-radius:10px;padding:14px;margin:16px 0;text-align:left;}
-.ped .lbl{font-size:.68rem;color:var(--m);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
-.ped .val{font-size:.9rem;font-weight:600;}
-.ped .val2{font-size:.78rem;color:var(--m);margin-top:2px;}
-.status{display:flex;align-items:center;gap:8px;justify-content:center;margin:16px 0;font-size:.85rem;font-weight:600;}
-.dot{width:10px;height:10px;border-radius:50%;background:var(--m);flex-shrink:0;}
-.dot.active{background:var(--g);animation:pulse 1.5s infinite;}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
-.btn{width:100%;padding:14px;border-radius:12px;border:none;font-size:.95rem;font-weight:700;cursor:pointer;margin-top:8px;transition:all .2s;font-family:'DM Sans',sans-serif;}
-.btn-start{background:var(--g);color:#fff;}
-.btn-delivered{background:var(--a);color:#fff;display:none;}
-.info{font-size:.75rem;color:var(--m);margin-top:12px;line-height:1.5;}
-.done-msg{display:none;margin-top:16px;padding:16px;background:rgba(76,175,114,.1);border:1px solid rgba(76,175,114,.3);border-radius:12px;}
-.done-msg p{font-size:.88rem;font-weight:600;color:var(--g);}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;}
+.header{position:sticky;top:0;z-index:10;background:rgba(15,14,12,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--b);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
+.header .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;color:var(--a);display:flex;align-items:center;gap:8px;}
+.header .logo span{font-size:1.3rem;}
+.dom-name-tag{font-size:.72rem;color:var(--m);background:var(--s2);padding:4px 10px;border-radius:20px;border:1px solid var(--b);}
+.content{padding:16px;max-width:500px;margin:0 auto;}
+.section-title{font-family:'Syne',sans-serif;font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--m);margin:20px 0 10px;display:flex;align-items:center;gap:8px;}
+.section-title .count{background:var(--a);color:#fff;font-size:.65rem;padding:2px 8px;border-radius:10px;font-family:'DM Sans',sans-serif;}
+.empty{text-align:center;padding:30px 20px;color:var(--m);font-size:.85rem;}
+.empty .big{font-size:2.5rem;margin-bottom:8px;}
 
-/* Custom confirm modal */
+.ocard{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:16px;margin-bottom:12px;transition:all .2s;}
+.ocard-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.ocard-id{font-family:'Syne',sans-serif;font-weight:800;font-size:.95rem;color:var(--a);}
+.ocard-time{font-size:.68rem;color:var(--m);}
+.ocard-client{font-weight:600;font-size:.88rem;margin-bottom:4px;}
+.ocard-addr{font-size:.78rem;color:var(--m);line-height:1.4;margin-bottom:4px;}
+.ocard-items{font-size:.75rem;color:var(--m);margin-bottom:4px;padding:6px 0;border-top:1px solid var(--b);}
+.ocard-pay{font-size:.75rem;color:var(--a2);font-weight:600;}
+.ocard-status{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:700;padding:4px 10px;border-radius:8px;margin-top:8px;}
+.st-listo{background:rgba(59,130,246,.12);color:var(--blue);}
+.st-encamino{background:rgba(232,82,26,.12);color:var(--a);animation:pulseText 1.5s infinite;}
+@keyframes pulseText{0%,100%{opacity:1}50%{opacity:.6}}
+
+.ocard-actions{display:flex;gap:8px;margin-top:12px;}
+.btn{padding:12px 16px;border-radius:10px;border:none;font-size:.85rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;flex:1;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.btn:active{transform:scale(.96);}
+.btn-go{background:var(--a);color:#fff;}
+.btn-deliver{background:var(--g);color:#fff;}
+.btn-call{background:var(--s2);color:var(--t);border:1px solid var(--b);flex:0 0 auto;padding:12px 14px;text-decoration:none;}
+
 .confirm-ov{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.78);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;}
 .confirm-ov.show{display:flex;}
 .confirm-box{background:var(--s);border:1px solid var(--b);border-radius:16px;padding:24px 20px;text-align:center;max-width:300px;width:92%;animation:popIn .3s ease;}
@@ -39,139 +50,232 @@ h1{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;margin-bottom:
 .confirm-btns button{flex:1;padding:12px;border-radius:10px;border:none;font-size:.85rem;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;}
 .cbtn-yes{background:var(--g);color:#fff;}
 .cbtn-no{background:transparent;border:1px solid var(--b) !important;color:var(--m);}
+
+.login-box{background:var(--s);border:1px solid var(--b);border-radius:20px;padding:32px 24px;max-width:340px;width:100%;text-align:center;margin:60px auto;}
+.login-box h1{font-family:'Syne',sans-serif;font-size:1.2rem;margin-bottom:16px;}
+.login-box .dom-btn{display:block;width:100%;padding:14px;margin-bottom:8px;background:var(--s2);border:1px solid var(--b);border-radius:12px;color:var(--t);font-size:.95rem;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.login-box .dom-btn:active{transform:scale(.97);background:rgba(232,82,26,.1);border-color:var(--a);}
+
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--s2);border:1px solid var(--b);border-radius:9px;padding:9px 15px;font-size:.8rem;opacity:0;transition:all .3s;pointer-events:none;z-index:999;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
-<div class="box">
-  <div class="logo">🏍️</div>
-  <h1>Panel Domiciliario</h1>
-  <p style="color:var(--m);font-size:.8rem;">Arturo's Fast Food</p>
 
-  <div class="ped" id="ped-info">
-    <div class="lbl">Cargando pedido...</div>
+<div id="login-screen">
+  <div class="login-box">
+    <div style="font-size:2.5rem;margin-bottom:8px;">🏍️</div>
+    <h1>Panel Domiciliario</h1>
+    <p style="color:var(--m);font-size:.8rem;margin-bottom:16px;">Arturo's Fast Food · Selecciona tu nombre</p>
+    <div id="dom-list"><p style="color:var(--m);font-size:.8rem;">Cargando...</p></div>
   </div>
-
-  <div class="status">
-    <span class="dot" id="status-dot"></span>
-    <span id="status-text">Listo para iniciar</span>
-  </div>
-
-  <button class="btn btn-start" id="btn-start" onclick="startTracking()">
-    🛵 Iniciar entrega
-  </button>
-  <button class="btn btn-delivered" id="btn-delivered" onclick="askDelivered()">
-    ✅ Detener y marcar entregado
-  </button>
-
-  <div class="done-msg" id="done-msg">
-    <p>✅ ¡Pedido entregado!</p>
-    <p style="font-size:.78rem;color:var(--m);margin-top:4px;">Gracias por tu trabajo. Puedes cerrar esta página.</p>
-  </div>
-
-  <p class="info" id="info-text">Al iniciar, el pedido se marca como "en camino" en el sistema.</p>
 </div>
 
-<!-- Custom confirm modal -->
+<div id="main-screen" style="display:none;">
+  <div class="header">
+    <div class="logo"><span>🏍️</span> Domicilios</div>
+    <div class="dom-name-tag" id="dom-tag">—</div>
+  </div>
+  <div class="content">
+    <div class="section-title">📦 Pedidos asignados <span class="count" id="count-listo">0</span></div>
+    <div id="list-listo"><div class="empty"><div class="big">📭</div>Sin pedidos asignados</div></div>
+
+    <div class="section-title">🛵 En camino <span class="count" id="count-encamino">0</span></div>
+    <div id="list-encamino"><div class="empty"><div class="big">🛵</div>Ningún pedido en camino</div></div>
+
+    <div class="section-title">✅ Entregados hoy <span class="count" id="count-done">0</span></div>
+    <div id="list-done"><div class="empty"><div class="big">📋</div>Sin entregas hoy</div></div>
+  </div>
+</div>
+
 <div class="confirm-ov" id="confirm-ov">
   <div class="confirm-box">
-    <div class="ci">📦</div>
-    <p>¿Confirmar que el pedido fue entregado?<small>Esta acción no se puede deshacer</small></p>
+    <div class="ci" id="confirm-icon">📦</div>
+    <p id="confirm-msg">¿Confirmar acción?</p>
     <div class="confirm-btns">
       <button class="cbtn-no" onclick="closeConfirm()">Cancelar</button>
-      <button class="cbtn-yes" onclick="doDelivered()">Sí, entregado</button>
+      <button class="cbtn-yes" id="confirm-yes">Sí</button>
     </div>
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-import { getDatabase, ref, update, onValue, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+import { getDatabase, ref, onValue, update, get } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
 const app = initializeApp({databaseURL:'https://arturos-fast-food-default-rtdb.firebaseio.com'});
 const db = getDatabase(app);
 
-const params = new URLSearchParams(window.location.search);
-const orderKey = params.get('key');
-const domName = params.get('dom') || 'Domiciliario';
+var currentDom = '';
+var allOrders = {};
+var DOMS = [];
 
-if(!orderKey){
-  document.getElementById('ped-info').innerHTML = '<div class="lbl" style="color:var(--r)">Link inválido. Pide un nuevo link al restaurante.</div>';
-  document.getElementById('btn-start').style.display='none';
-  document.getElementById('info-text').style.display='none';
-}
+function fmt(n){ return '$'+(n||0).toLocaleString('es-CO'); }
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.className='toast show';clearTimeout(t._t);t._t=setTimeout(function(){t.className='toast';},2600);}
+function timeAgo(ts){if(!ts)return '';var m=Math.floor((Date.now()-ts)/60000);if(m<1)return 'ahora';if(m<60)return 'hace '+m+' min';return 'hace '+Math.floor(m/60)+'h';}
 
-if(orderKey){
-  const orderRef = ref(db, 'pedidos/'+orderKey);
-  onValue(orderRef, function(snap){
-    var o = snap.val();
-    if(!o){ document.getElementById('ped-info').innerHTML='<div class="lbl" style="color:var(--r)">Pedido no encontrado</div>'; return; }
-    var cl = o.cl||o.client||'Cliente';
-    var addr = o.addr||o.address||'';
-    var barrio = o.barrio||'';
-    var items = o.items||[];
-    var prods = items.map(function(i){ return (i.qty||1)+'x '+(i.nombre||i.name||'Producto'); }).join(', ');
-    document.getElementById('ped-info').innerHTML =
-      '<div class="lbl">Pedido '+o.id+'</div>'
-      +'<div class="val">👤 '+cl+'</div>'
-      +'<div class="val2">📍 '+addr+(barrio?' · '+barrio:'')+'</div>'
-      +(prods?'<div class="val2" style="margin-top:4px">🛒 '+prods+'</div>':'');
-
-    // If already delivered or en_camino, update UI
-    if(o.st==='enviado'){
-      document.getElementById('btn-start').style.display='none';
-      document.getElementById('btn-delivered').style.display='none';
-      document.getElementById('done-msg').style.display='block';
-      document.getElementById('status-dot').className='dot';
-      document.getElementById('status-text').textContent='Pedido entregado';
-      document.getElementById('info-text').style.display='none';
-    } else if(o.st==='en_camino'){
-      document.getElementById('btn-start').style.display='none';
-      document.getElementById('btn-delivered').style.display='block';
-      document.getElementById('status-dot').className='dot active';
-      document.getElementById('status-text').textContent='En camino...';
-      document.getElementById('info-text').textContent='Cuando llegues, toca "Detener y marcar entregado".';
-    }
-  }, {onlyOnce:true});
-}
-
-window.startTracking = function(){
-  document.getElementById('btn-start').style.display='none';
-  document.getElementById('btn-delivered').style.display='block';
-  document.getElementById('status-dot').className='dot active';
-  document.getElementById('status-text').textContent='En camino...';
-  document.getElementById('info-text').textContent='Cuando llegues, toca "Detener y marcar entregado".';
-
-  if(orderKey){
-    update(ref(db,'pedidos/'+orderKey), {st:'en_camino', dom:domName});
+// ── LOGIN: Load doms from Firebase ──
+onValue(ref(db,'config/doms'),function(snap){
+  var saved = snap.val();
+  if(saved) DOMS = Object.values(saved);
+  var container = document.getElementById('dom-list');
+  if(!DOMS.length){
+    container.innerHTML='<p style="color:var(--r);font-size:.8rem;">No hay domiciliarios configurados.</p>';
+    return;
   }
+  var activeDoms = DOMS.filter(function(d){return d.on!==false;});
+  if(!activeDoms.length){
+    container.innerHTML='<p style="color:var(--r);font-size:.8rem;">Todos los domiciliarios están desactivados.</p>';
+    return;
+  }
+  container.innerHTML = activeDoms.map(function(d){
+    return '<button class="dom-btn" onclick="selectDom(\''+d.name.replace(/'/g,"\\'")+'\')">🏍️ '+d.name+'</button>';
+  }).join('');
+},{onlyOnce:true});
+
+// ── SELECT DOM ──
+window.selectDom = function(name){
+  currentDom = name;
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('main-screen').style.display='block';
+  document.getElementById('dom-tag').textContent='🏍️ '+name;
+  loadOrders();
 };
 
-window.askDelivered = function(){
+// ── LOAD ORDERS (real-time) ──
+function loadOrders(){
+  onValue(ref(db,'pedidos'),function(snap){
+    allOrders = snap.val() || {};
+    renderOrders();
+  });
+}
+
+function renderOrders(){
+  var listos=[], encamino=[], done=[];
+  var todayStart = new Date(); todayStart.setHours(0,0,0,0);
+
+  Object.keys(allOrders).forEach(function(key){
+    var o = allOrders[key];
+    if(!o || o.dom !== currentDom) return;
+    o._key = key;
+    if(o.st === 'listo') listos.push(o);
+    else if(o.st === 'en_camino') encamino.push(o);
+    else if(o.st === 'enviado' && o.t && o.t >= todayStart.getTime()) done.push(o);
+  });
+
+  listos.sort(function(a,b){return (b.t||0)-(a.t||0);});
+  encamino.sort(function(a,b){return (b.t||0)-(a.t||0);});
+  done.sort(function(a,b){return (b.t||0)-(a.t||0);});
+
+  document.getElementById('count-listo').textContent = listos.length;
+  document.getElementById('count-encamino').textContent = encamino.length;
+  document.getElementById('count-done').textContent = done.length;
+
+  document.getElementById('list-listo').innerHTML = listos.length
+    ? listos.map(function(o){return cardHTML(o,'listo');}).join('')
+    : '<div class="empty"><div class="big">📭</div>Sin pedidos asignados</div>';
+
+  document.getElementById('list-encamino').innerHTML = encamino.length
+    ? encamino.map(function(o){return cardHTML(o,'en_camino');}).join('')
+    : '<div class="empty"><div class="big">🛵</div>Ningún pedido en camino</div>';
+
+  document.getElementById('list-done').innerHTML = done.length
+    ? done.map(function(o){return cardHTML(o,'enviado');}).join('')
+    : '<div class="empty"><div class="big">📋</div>Sin entregas hoy</div>';
+}
+
+function cardHTML(o, st){
+  var cl = o.cl||o.client||'Cliente';
+  var addr = o.addr||o.address||'';
+  var barrio = o.barrio||'';
+  var ph = o.ph||'';
+  var items = (o.items||[]).map(function(i){return (i.qty||1)+'x '+(i.nombre||i.name||'?');}).join(', ');
+  var sub = (o.items||[]).reduce(function(s,i){return s+((i.precio||0)*(i.qty||1));},0);
+
+  var statusHTML = '';
+  if(st==='listo') statusHTML='<span class="ocard-status st-listo">📦 Listo</span>';
+  if(st==='en_camino') statusHTML='<span class="ocard-status st-encamino">🛵 En camino</span>';
+  if(st==='enviado') statusHTML='<span class="ocard-status" style="background:rgba(76,175,114,.12);color:var(--g);">✅ Entregado</span>';
+
+  var actionsHTML = '';
+  if(st==='listo'){
+    actionsHTML='<div class="ocard-actions">'
+      +'<button class="btn btn-go" onclick="askEnCamino(\''+o._key+'\')">🛵 Salir en camino</button>'
+      +(ph?'<a class="btn btn-call" href="tel:'+ph+'">📞</a>':'')
+      +'</div>';
+  } else if(st==='en_camino'){
+    actionsHTML='<div class="ocard-actions">'
+      +'<button class="btn btn-deliver" onclick="askEntregado(\''+o._key+'\')">✅ Marcar entregado</button>'
+      +(ph?'<a class="btn btn-call" href="tel:'+ph+'">📞</a>':'')
+      +'</div>';
+  }
+
+  return '<div class="ocard">'
+    +'<div class="ocard-header"><span class="ocard-id">'+(o.id||'#?')+'</span><span class="ocard-time">'+timeAgo(o.t)+'</span></div>'
+    +'<div class="ocard-client">👤 '+cl+'</div>'
+    +'<div class="ocard-addr">📍 '+addr+(barrio?' · '+barrio:'')+'</div>'
+    +(items?'<div class="ocard-items">🛒 '+items+'</div>':'')
+    +'<div style="display:flex;justify-content:space-between;align-items:center;">'
+    +'<span class="ocard-pay">💳 '+(o.pay||'—')+' · '+fmt(sub)+'</span>'
+    +statusHTML
+    +'</div>'
+    +actionsHTML
+    +'</div>';
+}
+
+// ── ACTIONS ──
+var pendingAction = null;
+
+window.askEnCamino = function(key){
+  pendingAction = function(){ doEnCamino(key); };
+  document.getElementById('confirm-icon').textContent='🛵';
+  document.getElementById('confirm-msg').innerHTML='¿Confirmar que sales con el pedido?<small>El cliente será notificado con sonido</small>';
+  document.getElementById('confirm-yes').textContent='Sí, en camino';
+  document.getElementById('confirm-yes').className='cbtn-yes';
+  document.getElementById('confirm-yes').style.background='var(--a)';
+  document.getElementById('confirm-ov').classList.add('show');
+};
+
+window.askEntregado = function(key){
+  pendingAction = function(){ doEntregado(key); };
+  document.getElementById('confirm-icon').textContent='📦';
+  document.getElementById('confirm-msg').innerHTML='¿Confirmar que el pedido fue entregado?<small>Esta acción no se puede deshacer</small>';
+  document.getElementById('confirm-yes').textContent='Sí, entregado';
+  document.getElementById('confirm-yes').className='cbtn-yes';
+  document.getElementById('confirm-yes').style.background='var(--g)';
   document.getElementById('confirm-ov').classList.add('show');
 };
 
 window.closeConfirm = function(){
   document.getElementById('confirm-ov').classList.remove('show');
+  pendingAction=null;
 };
 
-window.doDelivered = function(){
+document.getElementById('confirm-yes').addEventListener('click',function(){
   document.getElementById('confirm-ov').classList.remove('show');
-  document.getElementById('status-dot').className='dot';
-  document.getElementById('status-text').textContent='Pedido entregado';
-  document.getElementById('btn-delivered').style.display='none';
-  document.getElementById('done-msg').style.display='block';
-  document.getElementById('info-text').style.display='none';
+  if(pendingAction) pendingAction();
+  pendingAction=null;
+});
 
-  if(orderKey){
-    update(ref(db,'pedidos/'+orderKey), {st:'enviado'});
-    // Update domiciliario stats
-    var statsRef = ref(db, 'config/domStats/'+domName);
+function doEnCamino(key){
+  update(ref(db,'pedidos/'+key), {st:'en_camino', tEnCamino:Date.now()});
+  toast('🛵 Pedido marcado en camino');
+}
+
+function doEntregado(key){
+  update(ref(db,'pedidos/'+key), {st:'enviado', tEntregado:Date.now()});
+  var dom = DOMS.find(function(d){return d.name===currentDom;});
+  if(dom){
+    var statsRef = ref(db, 'config/domStats/'+dom.id);
     get(statsRef).then(function(snap){
       var stats = snap.val() || {pd:0, ing:0};
-      update(statsRef, {pd: (stats.pd||0)+1});
+      update(statsRef, {pd: (stats.pd||0)+1, ing: (stats.ing||0)+8000});
     }).catch(function(){});
   }
-};
+  toast('✅ ¡Pedido entregado!');
+}
 
 // Force unregister old service workers
 if('serviceWorker' in navigator){
