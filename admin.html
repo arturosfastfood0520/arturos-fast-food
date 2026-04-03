@@ -153,7 +153,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-he
       <h2>Domiciliarios 🏍️</h2>
       <div class="domgrid" id="dom-grid"></div>
       <div class="ready">
-        <h3>📦 Listos para asignar</h3>
+        <h3>📦 Estado de domicilios</h3>
         <div id="ready-list"><p style="color:var(--m);font-size:.8rem;">Sin pedidos listos</p></div>
       </div>
     </div>
@@ -536,7 +536,7 @@ function renderKitchen(){
 
   var stL={nuevo:'NUEVO',preparando:'PREPARANDO',listo:'LISTO',enviado:'ENVIADO'};
   var stC={nuevo:'sp-n',preparando:'sp-p',listo:'sp-l',enviado:'sp-e'};
-  var nxL={nuevo:'▶ Preparar',preparando:'✓ Listo',listo:'🏍 Enviar'};
+  var nxL={nuevo:'▶ Preparar',preparando:'✓ Listo'};
 
   var sorted=Object.entries(orders).sort(function(a,b){return b[1].t-a[1].t;});
   var active=sorted.filter(function(e){return e[1].st!=='enviado';});
@@ -579,18 +579,23 @@ function renderKitchen(){
       +'<div class="ocp">💳 '+pay+'</div></div>'
       +'<div class="ocas">'
       +'<a class="ocbt wa" href="'+waUrl(phWa,clientMsg)+'" target="_blank">'+WA_ICO+' Cliente</a>'
-      +(st!=='enviado'
+      +(st==='nuevo'||st==='preparando'
         ?'<button class="ocbt nx" onclick="advOrder(\''+key+'\',\''+st+'\')">'+nxL[st]+'</button>'
-        :'<span class="ocbt dn">✓ Listo</span>')
+        :st==='listo'&&!o.dom
+        ?'<span class="ocbt" style="background:rgba(59,130,246,.12);color:#3b82f6;cursor:default;">⏳ Esperando dom.</span>'
+        :st==='en_camino'
+        ?'<span class="ocbt" style="background:rgba(232,82,26,.12);color:var(--a);cursor:default;">🛵 '+(o.dom||'En camino')+'</span>'
+        :'<span class="ocbt dn">✅ Entregado</span>')
       +'</div></div></div>';
   });
   document.getElementById('board').innerHTML=html;
 }
 
 function advOrder(key,st){
-  var nx={nuevo:'preparando',preparando:'listo',listo:'enviado'};
+  var nx={nuevo:'preparando',preparando:'listo'};
   if(!nx[st])return;
   waitDB(function(){window._update(window._ref(window._db,'pedidos/'+key),{st:nx[st]});});
+  if(nx[st]==='listo')toast('✅ Pedido listo — los domiciliarios lo verán en su panel');
 }
 
 // ══════════════════════════════════════════
@@ -618,21 +623,36 @@ function renderDom(){
       +'</div>';
   }).join('');
 
-  var readyOrders=Object.entries(orders).filter(function(e){return e[1].st==='listo';});
+  var readyOrders=Object.entries(orders).filter(function(e){return e[1].st==='listo'&&!e[1].dom;});
+  var enCaminoOrders=Object.entries(orders).filter(function(e){return e[1].st==='en_camino';});
   var readyList=document.getElementById('ready-list');
   if(!readyList)return;
-  if(!readyOrders.length){
-    readyList.innerHTML='<p style="color:var(--m);font-size:.8rem;">Sin pedidos listos para asignar</p>';
-    return;
+  var rhtml='';
+  if(readyOrders.length){
+    rhtml+='<p style="color:var(--a);font-size:.75rem;font-weight:600;margin-bottom:8px;">📦 '+readyOrders.length+' pedido(s) esperando domiciliario</p>';
+    rhtml+=readyOrders.map(function(e){
+      var key=e[0],o=e[1];
+      return '<div style="background:var(--s2);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">'
+        +'<div><div style="font-weight:700;font-size:.85rem;">'+(o.id||key.substring(0,6))+'</div>'
+        +'<div style="font-size:.75rem;color:var(--m);">'+(o.cl||'Cliente')+' · '+(o.addr||'')+'</div></div>'
+        +'<span style="font-size:.72rem;color:var(--blue);font-weight:600;">⏳ Esperando</span>'
+        +'</div>';
+    }).join('');
+  } else {
+    rhtml+='<p style="color:var(--m);font-size:.8rem;">Sin pedidos listos</p>';
   }
-  readyList.innerHTML=readyOrders.map(function(e){
-    var key=e[0],o=e[1];
-    return '<div style="background:var(--s2);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">'
-      +'<div><div style="font-weight:700;font-size:.85rem;">'+(o.id||key.substring(0,6))+'</div>'
-      +'<div style="font-size:.75rem;color:var(--m);">'+(o.cl||'Cliente')+' · '+(o.addr||'')+'</div></div>'
-      +'<button onclick="assignOrder(\''+key+'\')" style="padding:8px 14px;background:var(--g);border:none;border-radius:8px;color:#fff;font-size:.78rem;font-weight:700;cursor:pointer;">Asignar</button>'
-      +'</div>';
-  }).join('');
+  if(enCaminoOrders.length){
+    rhtml+='<p style="color:var(--a);font-size:.75rem;font-weight:600;margin:12px 0 8px;">🛵 '+enCaminoOrders.length+' pedido(s) en camino</p>';
+    rhtml+=enCaminoOrders.map(function(e){
+      var key=e[0],o=e[1];
+      return '<div style="background:var(--s2);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">'
+        +'<div><div style="font-weight:700;font-size:.85rem;">'+(o.id||key.substring(0,6))+'</div>'
+        +'<div style="font-size:.75rem;color:var(--m);">'+(o.cl||'Cliente')+' · '+(o.addr||'')+'</div></div>'
+        +'<span style="font-size:.72rem;color:var(--a);font-weight:600;">🏍️ '+(o.dom||'?')+'</span>'
+        +'</div>';
+    }).join('');
+  }
+  readyList.innerHTML=rhtml;
 }
 
 function assignOrder(key){
