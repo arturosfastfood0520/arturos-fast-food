@@ -124,6 +124,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-he
     <div class="logo">🍔 Arturo's<span>Panel Admin</span></div>
     <div class="tabs">
       <button class="tab active" data-v="kitchen" onclick="showTab('kitchen')">👨‍🍳 Cocina</button>
+      <button class="tab" data-v="ready" onclick="showTab('ready')">📦 Listos</button>
       <button class="tab" data-v="delivery" onclick="showTab('delivery')">🏍️ Dom.</button>
       <button class="tab" data-v="menu" onclick="showTab('menu')">🍽️ Menú</button>
       <button class="tab" data-v="imgs" onclick="showTab('imgs')">📸 Fotos</button>
@@ -147,15 +148,26 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);min-he
     </div>
   </div>
 
+  <!-- ═══ LISTOS / ENVIADOS ═══ -->
+  <div class="view" id="view-ready">
+    <div class="pv">
+      <h2>Pedidos Listos & Enviados 📦</h2>
+      <p class="pv-sub">Pedidos que salieron de cocina</p>
+      <div class="kstats" style="grid-template-columns:repeat(3,1fr);">
+        <div class="kstat"><div class="n kl" id="rl">0</div><div class="l">Listos</div></div>
+        <div class="kstat"><div class="n" style="color:var(--a);" id="rc">0</div><div class="l">En camino</div></div>
+        <div class="kstat"><div class="n ke" id="re">0</div><div class="l">Entregados</div></div>
+      </div>
+      <div class="board" id="ready-board"></div>
+    </div>
+  </div>
+
   <!-- ═══ DOMICILIARIOS ═══ -->
   <div class="view" id="view-delivery">
     <div class="pv">
       <h2>Domiciliarios 🏍️</h2>
+      <p class="pv-sub">Gestión y estadísticas</p>
       <div class="domgrid" id="dom-grid"></div>
-      <div class="ready">
-        <h3>📦 Estado de domicilios</h3>
-        <div id="ready-list"><p style="color:var(--m);font-size:.8rem;">Sin pedidos listos</p></div>
-      </div>
     </div>
   </div>
 
@@ -395,6 +407,7 @@ function showTab(v){
   document.querySelector('.tab[data-v="'+v+'"]').classList.add('active');
   if(v==='menu') loadMenu();
   if(v==='delivery') renderDom();
+  if(v==='ready') renderReady();
   if(v==='settings'){renderDomConfig();loadComboConfig();}
   if(v==='imgs') renderImgs();
   if(v==='promos'||v==='plato') fillPromoForms();
@@ -527,29 +540,46 @@ function elapsed(t){var m=Math.floor((Date.now()-t)/60000);if(m<1)return'Ahora';
 // KITCHEN
 // ══════════════════════════════════════════
 function renderKitchen(){
-  var counts={nuevo:0,preparando:0,listo:0,enviado:0};
+  var counts={nuevo:0,preparando:0,listo:0,enviado:0,en_camino:0};
   Object.values(orders).forEach(function(o){if(counts[o.st]!==undefined)counts[o.st]++;});
   document.getElementById('kn').textContent=counts.nuevo;
   document.getElementById('kp').textContent=counts.preparando;
-  document.getElementById('kl').textContent=counts.listo;
+  document.getElementById('kl').textContent=counts.listo+(counts.en_camino||0);
   document.getElementById('ke').textContent=counts.enviado;
 
-  var stL={nuevo:'NUEVO',preparando:'PREPARANDO',listo:'LISTO',enviado:'ENVIADO'};
-  var stC={nuevo:'sp-n',preparando:'sp-p',listo:'sp-l',enviado:'sp-e'};
+  // Update Listos tab badge
+  var readyBadge=counts.listo+(counts.en_camino||0);
+  var readyTab=document.querySelector('.tab[data-v="ready"]');
+  if(readyTab){
+    var existing=readyTab.querySelector('.tab-badge');
+    if(readyBadge>0){
+      if(!existing){
+        var b=document.createElement('span');
+        b.className='tab-badge';
+        b.style.cssText='display:inline-block;background:var(--g);color:#fff;font-size:.55rem;padding:1px 5px;border-radius:8px;margin-left:3px;vertical-align:middle;';
+        readyTab.appendChild(b);
+        existing=b;
+      }
+      existing.textContent=readyBadge;
+    } else if(existing){existing.remove();}
+  }
+
+  var stL={nuevo:'NUEVO',preparando:'PREPARANDO'};
+  var stC={nuevo:'sp-n',preparando:'sp-p'};
   var nxL={nuevo:'▶ Preparar',preparando:'✓ Listo'};
 
-  var sorted=Object.entries(orders).sort(function(a,b){return b[1].t-a[1].t;});
-  var active=sorted.filter(function(e){return e[1].st!=='enviado';});
-  var done=sorted.filter(function(e){return e[1].st==='enviado';});
-  var all=active.concat(done);
+  // Solo nuevos y preparando
+  var sorted=Object.entries(orders)
+    .filter(function(e){return e[1].st==='nuevo'||e[1].st==='preparando';})
+    .sort(function(a,b){return b[1].t-a[1].t;});
 
-  if(!all.length){
-    document.getElementById('board').innerHTML='<div style="text-align:center;padding:40px;color:var(--m)"><div style="font-size:2.5rem;margin-bottom:10px;">🍽️</div><p>Sin pedidos aún</p></div>';
+  if(!sorted.length){
+    document.getElementById('board').innerHTML='<div style="text-align:center;padding:40px;color:var(--m)"><div style="font-size:2.5rem;margin-bottom:10px;">✅</div><p>Sin pedidos pendientes en cocina</p></div>';
     return;
   }
 
   var html='';
-  all.forEach(function(entry){
+  sorted.forEach(function(entry){
     var key=entry[0],o=entry[1];
     var cl=o.cl||o.client||'Cliente';
     var ph=o.ph||o.phone||'';
@@ -579,16 +609,68 @@ function renderKitchen(){
       +'<div class="ocp">💳 '+pay+'</div></div>'
       +'<div class="ocas">'
       +'<a class="ocbt wa" href="'+waUrl(phWa,clientMsg)+'" target="_blank">'+WA_ICO+' Cliente</a>'
-      +(st==='nuevo'||st==='preparando'
-        ?'<button class="ocbt nx" onclick="advOrder(\''+key+'\',\''+st+'\')">'+nxL[st]+'</button>'
-        :st==='listo'&&!o.dom
-        ?'<span class="ocbt" style="background:rgba(59,130,246,.12);color:#3b82f6;cursor:default;">⏳ Esperando dom.</span>'
-        :st==='en_camino'
-        ?'<span class="ocbt" style="background:rgba(232,82,26,.12);color:var(--a);cursor:default;">🛵 '+(o.dom||'En camino')+'</span>'
-        :'<span class="ocbt dn">✅ Entregado</span>')
+      +'<button class="ocbt nx" onclick="advOrder(\''+key+'\',\''+st+'\')">'+nxL[st]+'</button>'
       +'</div></div></div>';
   });
   document.getElementById('board').innerHTML=html;
+
+  // Auto-render ready tab if visible
+  if(document.getElementById('view-ready').classList.contains('active'))renderReady();
+}
+
+function renderReady(){
+  var listos=[],encamino=[],enviados=[];
+  var todayStart=new Date();todayStart.setHours(0,0,0,0);
+
+  Object.entries(orders).forEach(function(e){
+    var key=e[0],o=e[1];o._key=key;
+    if(o.st==='listo') listos.push(o);
+    else if(o.st==='en_camino') encamino.push(o);
+    else if(o.st==='enviado'&&o.t&&o.t>=todayStart.getTime()) enviados.push(o);
+  });
+
+  document.getElementById('rl').textContent=listos.length;
+  document.getElementById('rc').textContent=encamino.length;
+  document.getElementById('re').textContent=enviados.length;
+
+  var all=listos.concat(encamino).concat(enviados);
+  if(!all.length){
+    document.getElementById('ready-board').innerHTML='<div style="text-align:center;padding:40px;color:var(--m)"><div style="font-size:2.5rem;margin-bottom:10px;">📭</div><p>Sin pedidos listos o enviados hoy</p></div>';
+    return;
+  }
+
+  var stL={listo:'LISTO',en_camino:'EN CAMINO',enviado:'ENTREGADO'};
+  var stC={listo:'sp-l',en_camino:'sp-n',enviado:'sp-e'};
+  var html='';
+  all.forEach(function(o){
+    var key=o._key;
+    var cl=o.cl||o.client||'Cliente';
+    var ph=o.ph||'';
+    var addr=o.addr||o.address||'';
+    var barrio=o.barrio||'';
+    var pay=o.pay||'';
+    var oid=o.id||key.substring(0,6);
+    var st=o.st;
+    var items=o.items||[];
+    var sub=items.reduce(function(s,i){return s+((i.precio||0)*(i.qty||1));},0);
+    var itemsHtml=items.map(function(i){
+      return '<div class="ocir"><span class="ociq">'+(i.qty||1)+'x</span>'+(i.nombre||i.name||'')+(i.ss?' ('+i.ss+')':'')+'</div>';
+    }).join('');
+
+    var statusExtra='';
+    if(st==='listo'&&!o.dom) statusExtra='<span style="font-size:.68rem;color:#3b82f6;margin-left:6px;">⏳ Esperando domiciliario</span>';
+    if(st==='en_camino'&&o.dom) statusExtra='<span style="font-size:.68rem;color:var(--a);margin-left:6px;">🏍️ '+o.dom+'</span>';
+
+    html+='<div class="oc">'
+      +'<div class="och"><span class="ocid">'+oid+'</span><span class="sp '+stC[st]+'">'+stL[st]+'</span>'+statusExtra
+      +'<span class="otm">'+elapsed(o.t)+'</span></div>'
+      +'<div class="occ">👤 '+cl+' · '+ph+'</div>'
+      +'<div class="oca">📍 '+addr+(barrio?' · '+barrio:'')+'</div>'
+      +'<div class="oci">'+itemsHtml+'</div>'
+      +'<div class="ocf"><div><div class="oct2">'+fmt(sub)+'</div>'
+      +'<div class="ocp">💳 '+pay+'</div></div></div></div>';
+  });
+  document.getElementById('ready-board').innerHTML=html;
 }
 
 function advOrder(key,st){
@@ -606,83 +688,25 @@ function renderDom(){
   if(!grid)return;
   grid.innerHTML=DOMS.map(function(d){
     var peds=d.pd||0;
-    var gain=d.ing||0;
+    // Count active deliveries for this dom
+    var activeCount=Object.values(orders).filter(function(o){return o.dom===d.name&&o.st==='en_camino';}).length;
+    var statusText=activeCount>0?'🛵 '+activeCount+' en camino':'● Disponible';
+    var statusColor=activeCount>0?'var(--a)':'var(--g)';
     return '<div class="domcard">'
       +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
       +'<div style="width:38px;height:38px;border-radius:50%;background:var(--a);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🏍️</div>'
       +'<div style="flex:1;"><div style="font-weight:700;font-size:.92rem;">'+d.name+'</div>'
       +'<div style="font-size:.68rem;color:var(--m);">'+d.ph+'</div>'
-      +'<div style="font-size:.72rem;color:var(--g);">● Disponible</div></div>'
+      +'<div style="font-size:.72rem;color:'+statusColor+';">'+statusText+'</div></div>'
       +'</div>'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">'
+      +'<div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:8px;">'
       +'<div style="background:var(--s2);border-radius:8px;padding:8px;text-align:center;">'
       +'<div style="font-family:Syne,sans-serif;font-size:1.1rem;font-weight:800;">'+peds+'</div>'
-      +'<div style="font-size:.62rem;color:var(--m);text-transform:uppercase;">Pedidos</div></div>'
+      +'<div style="font-size:.62rem;color:var(--m);text-transform:uppercase;">Pedidos totales</div></div>'
       +'</div>'
       +'<a class="ocbt wa" href="'+waUrl(d.ph,'')+'" target="_blank" style="text-align:center;display:block;width:100%;padding:10px;">'+WA_ICO+' WhatsApp</a>'
       +'</div>';
   }).join('');
-
-  var readyOrders=Object.entries(orders).filter(function(e){return e[1].st==='listo'&&!e[1].dom;});
-  var enCaminoOrders=Object.entries(orders).filter(function(e){return e[1].st==='en_camino';});
-  var readyList=document.getElementById('ready-list');
-  if(!readyList)return;
-  var rhtml='';
-  if(readyOrders.length){
-    rhtml+='<p style="color:var(--a);font-size:.75rem;font-weight:600;margin-bottom:8px;">📦 '+readyOrders.length+' pedido(s) esperando domiciliario</p>';
-    rhtml+=readyOrders.map(function(e){
-      var key=e[0],o=e[1];
-      return '<div style="background:var(--s2);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">'
-        +'<div><div style="font-weight:700;font-size:.85rem;">'+(o.id||key.substring(0,6))+'</div>'
-        +'<div style="font-size:.75rem;color:var(--m);">'+(o.cl||'Cliente')+' · '+(o.addr||'')+'</div></div>'
-        +'<span style="font-size:.72rem;color:var(--blue);font-weight:600;">⏳ Esperando</span>'
-        +'</div>';
-    }).join('');
-  } else {
-    rhtml+='<p style="color:var(--m);font-size:.8rem;">Sin pedidos listos</p>';
-  }
-  if(enCaminoOrders.length){
-    rhtml+='<p style="color:var(--a);font-size:.75rem;font-weight:600;margin:12px 0 8px;">🛵 '+enCaminoOrders.length+' pedido(s) en camino</p>';
-    rhtml+=enCaminoOrders.map(function(e){
-      var key=e[0],o=e[1];
-      return '<div style="background:var(--s2);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;">'
-        +'<div><div style="font-weight:700;font-size:.85rem;">'+(o.id||key.substring(0,6))+'</div>'
-        +'<div style="font-size:.75rem;color:var(--m);">'+(o.cl||'Cliente')+' · '+(o.addr||'')+'</div></div>'
-        +'<span style="font-size:.72rem;color:var(--a);font-weight:600;">🏍️ '+(o.dom||'?')+'</span>'
-        +'</div>';
-    }).join('');
-  }
-  readyList.innerHTML=rhtml;
-}
-
-function assignOrder(key){
-  var avail=DOMS.filter(function(d){return d.on!==false;});
-  if(!avail.length){toast('Sin domiciliarios disponibles');return;}
-  var html='<div class="overlay" id="dom-overlay">'
-    +'<div class="overlay-box">'
-    +'<div style="font-family:Syne,sans-serif;font-size:1rem;font-weight:800;margin-bottom:16px;">¿A quién asignar?</div>'
-    +avail.map(function(d){
-      return '<button onclick="doAssign(\''+key+'\','+d.id+')" '
-        +'style="display:block;width:100%;padding:12px;margin-bottom:8px;background:var(--s2);border:1px solid var(--b);'
-        +'border-radius:10px;color:var(--t);font-size:.9rem;font-weight:600;cursor:pointer;">🏍️ '+d.name+'</button>';
-    }).join('')
-    +'<button onclick="document.getElementById(\'dom-overlay\').remove()" '
-    +'style="padding:8px 20px;background:transparent;border:1px solid var(--b);border-radius:8px;color:var(--m);cursor:pointer;font-size:.8rem;">Cancelar</button>'
-    +'</div></div>';
-  document.body.insertAdjacentHTML('beforeend',html);
-}
-
-function doAssign(key,domId){
-  document.getElementById('dom-overlay').remove();
-  var dom=DOMS.find(function(d){return d.id===domId;});
-  if(!dom)return;
-  var o=orders[key];
-  if(!o)return;
-  waitDB(function(){
-    window._update(window._ref(window._db,'pedidos/'+key),{st:'listo',dom:dom.name});
-  });
-  toast((o.id||key)+' asignado a '+dom.name+' ✓ — Aparecerá en su panel');
-  renderDom();
 }
 
 // ══════════════════════════════════════════
